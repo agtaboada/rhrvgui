@@ -37,9 +37,15 @@ ui<-fluidPage(
                fluidRow(
                  h4("Episodes")
                ),
-                actionButton("loadEpButton", "Load"),
-                actionButton("clearEpButton", "Clear"),
-                actionButton("editEpButton", "Edit")
+                shinyFilesButton("loadEpButton", "Load episodes",
+                                 "Select a file",
+                                 FALSE,
+                                 buttonType = "default",
+                                 class = NULL,
+                                 icon = NULL,
+                                 style = NULL,
+                                 viewtype = "detail"),
+                actionButton("clearEpButton", "Clear")
                ),
   mainPanel("",
               fluidRow(
