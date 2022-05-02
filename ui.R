@@ -65,8 +65,7 @@ ui<-fluidPage(
     tabPanel(id="panelPoincare","Poincare plot",
              fluidPage(
                sidebarPanel(id="poincareSidebar",
-               h4("Poincare Plot")
-                            )
-             )
-  )
-))
+               h4("Poincare Plot"),
+               selectInput("poincareEpisodes", "Episodes","Global")
+            )
+))))

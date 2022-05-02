@@ -52,6 +52,9 @@ shinyServer(function(input, output, session){
         hrv.data <- LoadEpisodesAscii(hrv.data, parseFilePaths(volumes, file())$name, datapath)
         hrv.data = BuildNIHR(hrv.data)
         hrv.data <<- hrv.data
+        listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
+        listOfEpisodeOptions <- append(listOfEpisodeOptions, "GLOBAL")
+        updateSelectInput(session, "poincareEpisodes", choices = listOfEpisodeOptions)
         output$mainGraph<-renderPlot({
           PlotNIHR(hrv.data, Indexes="all", main="Data with episodes")
         })
