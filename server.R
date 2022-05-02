@@ -53,9 +53,7 @@ shinyServer(function(input, output, session){
         hrv.data = BuildNIHR(hrv.data)
         hrv.data <<- hrv.data
         output$mainGraph<-renderPlot({
-          PlotNIHR(hrv.data, main="Data with episodes")
-          #ListEpisodes(hrv.data, TimeHMS = FALSE)
-          OverplotEpisodes(hrv.data, Indexes = 1 , ymark=c(150,151),eplim=c(20,150))
+          PlotNIHR(hrv.data, Indexes="all", main="Data with episodes")
         })
       }
     })
