@@ -1,5 +1,7 @@
 shinyServer(function(input, output, session){
     hrv.data <- NULL
+    beatSelected <<- FALSE
+    
     volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
     
     shinyFileChoose(input, "loadHrButton", roots = volumes, session = session)
@@ -14,6 +16,7 @@ shinyServer(function(input, output, session){
       if(length(file()) > 0 & is.numeric(file())){
         return(NULL)
       }else{
+        beatSelected <<- TRUE
         datapath <- parseFilePaths(volumes, file())$datapath
         datapath <- gsub("/",.Platform$file.sep, datapath)
         datapath <- gsub(basename(datapath), "", datapath)
@@ -54,7 +57,7 @@ shinyServer(function(input, output, session){
         hrv.data <<- hrv.data
         listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
         listOfEpisodeOptions <- append(listOfEpisodeOptions, "GLOBAL")
-        updateSelectInput(session, "poincareEpisodes", choices = listOfEpisodeOptions)
+        updateSelectInput(session, "poincareEpisodes", choices = listOfEpisodeOptions, selected="GLOBAL")
         output$mainGraph<-renderPlot({
           PlotNIHR(hrv.data, Indexes="all", main="Data with episodes")
         })
@@ -67,5 +70,24 @@ shinyServer(function(input, output, session){
         output$mainGraph<-renderPlot({
           PlotNIHR(hrv.data, main="Data")
         })
+    })
+    
+    observeEvent(input$mainTabSelect, {
+        if(input$mainTabSelect == "poinTab"){
+          output$mainPoinPlot <- {
+            if(beatSelected){
+              renderPlot({
+                hrv.data = CreateNonLinearAnalysis(hrv.data)
+                pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+                output$sd1 <- renderText({
+                  paste("SD1: ",pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
+                })
+                output$sd2 <- renderText({
+                  paste("SD2: ",pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
+                })
+              })
+            }
+          }
+        }
     })
   })

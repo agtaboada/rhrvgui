@@ -4,10 +4,11 @@ library(shinyFiles)
 library(shinyjs)
 library(spsComps)
 library(tkrplot)
+
 ui<-fluidPage(
   useShinyjs(),
   tags$link(rel = "stylesheet", type="text/css", href="css/style.css"),
-  navbarPage("RHRV GUI",
+  navbarPage("RHRV GUI", id="mainTabSelect",
     tabPanel("Main menu",
              sidebarPanel(id="mainSidebar",
                           "",
@@ -62,10 +63,38 @@ ui<-fluidPage(
     tabPanel("Interpolate"),
     tabPanel("Frame-based evolution"),
     tabPanel("Report"),
-    tabPanel(id="panelPoincare","Poincare plot",
+    tabPanel(id="panelPoincare", value="poinTab", "Poincare plot",
              fluidPage(
+               useShinyjs(),
                sidebarPanel(id="poincareSidebar",
-               h4("Poincare Plot"),
-               selectInput("poincareEpisodes", "Episodes","Global")
-            )
+                 h4("Poincare Plot"),
+                 selectInput("poincareEpisodes", "Episodes","Global"),
+                 selectInput("poincareSecondaryEpisodes", "Compare to","Global"),
+                 textOutput("sd1"),
+                 textOutput("sd2"),
+               ),
+               mainPanel(
+                 tabsetPanel(
+                   tabPanel(
+                     plotOutput("mainPoinPlot",
+                                width = "800px",
+                                height = "400px",
+                                click = NULL,
+                                dblclick = NULL,
+                                hover = NULL,
+                                brush = NULL,
+                                inline = FALSE)
+                    ),
+                   tabPanel(
+                     plotOutput("secondaryPoinPlot",
+                                width = "800px",
+                                height = "400px",
+                                click = NULL,
+                                dblclick = NULL,
+                                hover = NULL,
+                                brush = NULL,
+                                inline = FALSE)
+                   )
+                  )
+               )
 ))))
