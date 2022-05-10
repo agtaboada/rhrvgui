@@ -90,4 +90,24 @@ shinyServer(function(input, output, session){
           }
         }
     })
+    
+    observeEvent(input$poincareEpisodes, {
+      hrv.data = CreateNonLinearAnalysis(hrv.data)
+      if(input$poincareEpisodes == "GLOBAL"){
+        updateSelectInput(session, "poincareComparing", choices = ListEpisodes(hrv.data)["Tag"])
+        output$mainPoinPlot <- {
+          renderPlot({
+            pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+          })
+        }
+      }else{
+        updateSelectInput(session, "poincareComparing", choices="")
+        output$mainPoinPlot <- {
+         # episodesVector = SplitHRbyEpisodes(hrv.data, T=gsub(" ", "",input$pointcareEpisodes), verbose=NULL)
+          # hrv.episode = BuildNIHR(epsodesVector, verbose=TRUE)
+          renderPlot({
+            pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+          })
+      }}
+    })
   })

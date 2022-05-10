@@ -4,6 +4,7 @@ library(shinyFiles)
 library(shinyjs)
 library(spsComps)
 library(tkrplot)
+library(stringr)
 
 ui<-fluidPage(
   useShinyjs(),
@@ -69,7 +70,7 @@ ui<-fluidPage(
                sidebarPanel(id="poincareSidebar",
                  h4("Poincare Plot"),
                  selectInput("poincareEpisodes", "Episodes","Global"),
-                 selectInput("poincareSecondaryEpisodes", "Compare to","Global"),
+                 selectInput("poincareComparing", "Compare to","Global"),
                  textOutput("sd1"),
                  textOutput("sd2"),
                ),
