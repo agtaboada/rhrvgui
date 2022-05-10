@@ -116,7 +116,26 @@ shinyServer(function(input, output, session){
               refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
             })
           }
-      }}
+        }}
+    })
+    
+    
+    observeEvent(input$poincareComparing, {
+      output$secondaryPoinPlot <- {
+        if(episodesSelected){
+          hrv.episode = CreateHRVData(Verbose = TRUE)
+          hrv.data = InterpolateNIHR(hrv.data, freqhr = 4, method = c("linear", "spline"), verbose=NULL)
+          episodesVector = SplitHRbyEpisodes(hrv.data, T=str_replace_all(input$poincareComparing, fixed(" "), ""), verbose=NULL)
+          hrv.episode = LoadBeatVector(hrv.episode, episodesVector$InEpisodes)
+          hrv.episode = BuildNIHR(hrv.episode)
+          hrv.episode = CreateNonLinearAnalysis(hrv.episode)
+          renderPlot({
+            pointcareData = PoincarePlot(hrv.episode, doPlot = T, main="Secondary Plot", indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+            refreshSd1sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
+            refreshSd2sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
+          })
+        }
+      }
     })
     
     refreshSd1 <- function(data){
@@ -127,6 +146,18 @@ shinyServer(function(input, output, session){
     
     refreshSd2 <- function(data){
       output$sd2 <- renderText({
+        paste("SD2: ",data)
+      })
+    }
+    
+    refreshSd1sec <- function(data){
+      output$sd1sec <- renderText({
+        paste("SD1: ",data)
+      })
+    }
+    
+    refreshSd2sec <- function(data){
+      output$sd2sec <- renderText({
         paste("SD2: ",data)
       })
     }

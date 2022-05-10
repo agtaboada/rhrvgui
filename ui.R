@@ -71,8 +71,12 @@ ui<-fluidPage(
                  h4("Poincare Plot"),
                  selectInput("poincareEpisodes", "Episodes","Global"),
                  selectInput("poincareComparing", "Compare to","Global"),
+                 h5(tags$b("SDs main plot")),
                  textOutput("sd1"),
                  textOutput("sd2"),
+                 h5(tags$b("SDs secondary plot")),
+                 textOutput("sd1sec"),
+                 textOutput("sd2sec"),
                ),
                mainPanel(
                  tabsetPanel(
