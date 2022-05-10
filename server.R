@@ -1,6 +1,7 @@
 shinyServer(function(input, output, session){
     hrv.data <- NULL
     beatSelected <<- FALSE
+    episodesSelected <<- FALSE
     
     volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
     
@@ -58,6 +59,7 @@ shinyServer(function(input, output, session){
         listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
         listOfEpisodeOptions <- append(listOfEpisodeOptions, "GLOBAL")
         updateSelectInput(session, "poincareEpisodes", choices = listOfEpisodeOptions, selected="GLOBAL")
+        episodesSelected <<- TRUE
         output$mainGraph<-renderPlot({
           PlotNIHR(hrv.data, Indexes="all", main="Data with episodes")
         })
@@ -79,12 +81,8 @@ shinyServer(function(input, output, session){
               renderPlot({
                 hrv.data = CreateNonLinearAnalysis(hrv.data)
                 pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
-                output$sd1 <- renderText({
-                  paste("SD1: ",pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
-                })
-                output$sd2 <- renderText({
-                  paste("SD2: ",pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
-                })
+                refreshSd1(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
+                refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
               })
             }
           }
@@ -98,16 +96,39 @@ shinyServer(function(input, output, session){
         output$mainPoinPlot <- {
           renderPlot({
             pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+            refreshSd1(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
+            refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
           })
         }
       }else{
         updateSelectInput(session, "poincareComparing", choices="")
         output$mainPoinPlot <- {
-         # episodesVector = SplitHRbyEpisodes(hrv.data, T=gsub(" ", "",input$pointcareEpisodes), verbose=NULL)
-          # hrv.episode = BuildNIHR(epsodesVector, verbose=TRUE)
-          renderPlot({
-            pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
-          })
+          if(episodesSelected){
+            hrv.episode = CreateHRVData(Verbose = TRUE)
+            hrv.data = InterpolateNIHR(hrv.data, freqhr = 4, method = c("linear", "spline"), verbose=NULL)
+            episodesVector = SplitHRbyEpisodes(hrv.data, T=str_replace_all(input$poincareEpisodes, fixed(" "), ""), verbose=NULL)
+            hrv.episode = LoadBeatVector(hrv.episode, episodesVector$InEpisodes)
+            hrv.episode = BuildNIHR(hrv.episode)
+            hrv.episode = CreateNonLinearAnalysis(hrv.episode)
+            renderPlot({
+              pointcareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+              refreshSd1(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
+              refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
+            })
+          }
       }}
     })
+    
+    refreshSd1 <- function(data){
+      output$sd1 <- renderText({
+        paste("SD1: ",data)
+      })
+    }
+    
+    refreshSd2 <- function(data){
+      output$sd2 <- renderText({
+        paste("SD2: ",data)
+      })
+    }
   })
+
