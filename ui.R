@@ -47,6 +47,10 @@ ui<-fluidPage(
                                            viewtype = "detail"),
                           actionButton("clearEpButton", "Clear")
                           ),
+                          fluidRow(
+                            h4("Interpolation"),
+                            actionButton("interpolateButton", "Interpolate")
+                          )
              ),
              mainPanel(id="mainMainPanel",
                        "",

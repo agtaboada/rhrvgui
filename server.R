@@ -143,6 +143,15 @@ shinyServer(function(input, output, session){
       interpolationValue <<- input$sliderInterp
     })
     
+    observeEvent(input$interpolateButton, {
+      if(beatSelected){
+        hrv.data <<- InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
+        output$mainGraph<-renderPlot({
+          PlotHR(hrv.data, Indexes="all", main="Interpolated data")
+        })
+      }
+    })
+    
     refreshSd1 <- function(data){
       output$sd1 <- renderText({
         paste("SD1: ",data)
