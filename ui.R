@@ -36,6 +36,7 @@ ui<-fluidPage(
                           fluidRow(
                             h4("Episodes")
                           ),
+                          fluidRow(
                           shinyFilesButton("loadEpButton", "Load episodes",
                                            "Select a file",
                                            FALSE,
@@ -45,6 +46,7 @@ ui<-fluidPage(
                                            style = NULL,
                                            viewtype = "detail"),
                           actionButton("clearEpButton", "Clear")
+                          ),
              ),
              mainPanel(id="mainMainPanel",
                        "",
@@ -61,7 +63,6 @@ ui<-fluidPage(
                        )
              )         
     ),
-    tabPanel("Interpolate"),
     tabPanel("Frame-based evolution"),
     tabPanel("Report"),
     tabPanel(id="panelPoincare", value="poinTab", "Poincare plot",
@@ -102,4 +103,17 @@ ui<-fluidPage(
                    )
                   )
                )
-))))
+    )),
+    tabPanel(id="panelOptions", value="optionsTab", "Options",
+             tabPanel("Frame-based evolution",
+                      mainPanel("",
+                                fluidRow(
+                                  h4("Interpolate")
+                                ),
+                                fluidRow(
+                                  sliderInput("sliderInterp", "Frequency", min=1, max=25, value=4, step = 0.1)
+                                )
+                      )
+             ),)
+
+))

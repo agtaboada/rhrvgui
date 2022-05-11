@@ -2,6 +2,7 @@ shinyServer(function(input, output, session){
     hrv.data <- NULL
     beatSelected <<- FALSE
     episodesSelected <<- FALSE
+    interpolationValue <<- 4
     
     volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
     
@@ -105,7 +106,7 @@ shinyServer(function(input, output, session){
         output$mainPoinPlot <- {
           if(episodesSelected){
             hrv.episode = CreateHRVData(Verbose = TRUE)
-            hrv.data = InterpolateNIHR(hrv.data, freqhr = 4, method = c("linear", "spline"), verbose=NULL)
+            hrv.data = InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
             episodesVector = SplitHRbyEpisodes(hrv.data, T=str_replace_all(input$poincareEpisodes, fixed(" "), ""), verbose=NULL)
             hrv.episode = LoadBeatVector(hrv.episode, episodesVector$InEpisodes)
             hrv.episode = BuildNIHR(hrv.episode)
@@ -124,7 +125,7 @@ shinyServer(function(input, output, session){
       output$secondaryPoinPlot <- {
         if(episodesSelected){
           hrv.episode = CreateHRVData(Verbose = TRUE)
-          hrv.data = InterpolateNIHR(hrv.data, freqhr = 4, method = c("linear", "spline"), verbose=NULL)
+          hrv.data = InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
           episodesVector = SplitHRbyEpisodes(hrv.data, T=str_replace_all(input$poincareComparing, fixed(" "), ""), verbose=NULL)
           hrv.episode = LoadBeatVector(hrv.episode, episodesVector$InEpisodes)
           hrv.episode = BuildNIHR(hrv.episode)
@@ -136,6 +137,10 @@ shinyServer(function(input, output, session){
           })
         }
       }
+    })
+    
+    observeEvent(input$sliderInterp, {
+      interpolationValue <<- input$sliderInterp
     })
     
     refreshSd1 <- function(data){
