@@ -35,7 +35,7 @@ shinyServer(function(input, output, session){
       hrv.data = FilterNIHR(hrv.data)
       hrv.data<<- hrv.data
       output$mainGraph<-renderPlot({
-        PlotNIHR(hrv.data, main="Filtered non-interpolated heart rate")
+        PlotNIHR(hrv.data, Indexes="all", main="Filtered non-interpolated heart rate")
         })
     })
     
@@ -43,7 +43,7 @@ shinyServer(function(input, output, session){
         hrv.data = EditNIHR(hrv.data)
         hrv.data <<- hrv.data
         output$mainGraph<-renderPlot({
-          PlotNIHR(hrv.data, main="Edited data")})
+          PlotNIHR(hrv.data, Indexes="all", main="Edited data")})
     })
     
     observeEvent(input$loadEpButton, {
@@ -54,8 +54,7 @@ shinyServer(function(input, output, session){
         datapath <- parseFilePaths(volumes, file())$datapath
         datapath <- gsub("/",.Platform$file.sep, datapath)
         datapath <- gsub(basename(datapath), "", datapath)
-        hrv.data <- LoadEpisodesAscii(hrv.data, parseFilePaths(volumes, file())$name, datapath)
-        hrv.data = BuildNIHR(hrv.data)
+        hrv.data <<- LoadEpisodesAscii(hrv.data, parseFilePaths(volumes, file())$name, datapath)
         hrv.data <<- hrv.data
         listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
         listOfEpisodeOptions <- append(listOfEpisodeOptions, "GLOBAL")
@@ -68,8 +67,6 @@ shinyServer(function(input, output, session){
     })
     
     observeEvent(input$clearEpButton, {
-        hrv.data = BuildNIHR(hrv.data)
-        hrv.data <<- hrv.data
         output$mainGraph<-renderPlot({
           PlotNIHR(hrv.data, main="Data")
         })
@@ -109,7 +106,6 @@ shinyServer(function(input, output, session){
             hrv.data = InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
             episodesVector = SplitHRbyEpisodes(hrv.data, T=str_replace_all(input$poincareEpisodes, fixed(" "), ""), verbose=NULL)
             hrv.episode = LoadBeatVector(hrv.episode, episodesVector$InEpisodes)
-            hrv.episode = BuildNIHR(hrv.episode)
             hrv.episode = CreateNonLinearAnalysis(hrv.episode)
             renderPlot({
               pointcareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
