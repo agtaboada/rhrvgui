@@ -3,6 +3,10 @@ shinyServer(function(input, output, session){
     beatSelected <<- FALSE
     episodesSelected <<- FALSE
     interpolationValue <<- 4
+    timeLineX <<- c(-800, 800)
+    timeLineY <<- c(-800, 800)
+    customPlotAxis <<- FALSE
+    hrv.episode <<- NULL
     
     volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
     
@@ -78,7 +82,12 @@ shinyServer(function(input, output, session){
             if(beatSelected){
               renderPlot({
                 hrv.data = CreateNonLinearAnalysis(hrv.data)
-                pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+                if(customPlotAxis){
+                  pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL,
+                                            xlim=timeLineX, ylim=timeLineY)
+                }else{
+                  pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL)
+                }
                 refreshSd1(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
                 refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
               })
@@ -93,7 +102,12 @@ shinyServer(function(input, output, session){
         updateSelectInput(session, "poincareComparing", choices = ListEpisodes(hrv.data)["Tag"])
         output$mainPoinPlot <- {
           renderPlot({
-            pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+            if(customPlotAxis){
+              pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
+                                           xlim=timeLineX, ylim=timeLineY, verbose=NULL)
+            }else{
+              PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL)
+            }
             refreshSd1(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
             refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
           })
@@ -106,9 +120,15 @@ shinyServer(function(input, output, session){
             hrv.data = InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
             episodesVector = SplitHRbyEpisodes(hrv.data, T=str_replace_all(input$poincareEpisodes, fixed(" "), ""), verbose=NULL)
             hrv.episode = LoadBeatVector(hrv.episode, episodesVector$InEpisodes)
+            hrv.episode = BuildNIHR(hrv.episode, verbose=NULL)
             hrv.episode = CreateNonLinearAnalysis(hrv.episode)
             renderPlot({
-              pointcareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+              if(customPlotAxis){
+                pointcareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, xlim=timeLineX,
+                                             ylim=timeLineY, verbose=NULL)
+              }else{
+                poincareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL)
+              }
               refreshSd1(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
               refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
             })
@@ -120,23 +140,24 @@ shinyServer(function(input, output, session){
     observeEvent(input$poincareComparing, {
       output$secondaryPoinPlot <- {
         if(episodesSelected){
-          hrv.episode = CreateHRVData(Verbose = TRUE)
+          hrv.episode <<- CreateHRVData(Verbose = TRUE)
           hrv.data = InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
           episodesVector = SplitHRbyEpisodes(hrv.data, T=str_replace_all(input$poincareComparing, fixed(" "), ""), verbose=NULL)
-          hrv.episode = LoadBeatVector(hrv.episode, episodesVector$InEpisodes)
-          hrv.episode = BuildNIHR(hrv.episode)
-          hrv.episode = CreateNonLinearAnalysis(hrv.episode)
+          hrv.episode <<- LoadBeatVector(hrv.episode, episodesVector$InEpisodes)
+          hrv.episode <<- BuildNIHR(hrv.episode)
+          hrv.episode <<- CreateNonLinearAnalysis(hrv.episode)
           renderPlot({
-            pointcareData = PoincarePlot(hrv.episode, doPlot = T, main="Secondary Plot", indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+            if(customPlotAxis){
+              pointcareData = PoincarePlot(hrv.episode, doPlot = T, main="Secondary Plot", indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
+                                         xlim=timeLineX, ylim=timeLineY)
+            }else{
+              pointcareData = PoincarePlot(hrv.episode, doPlot = T, main="Secondary Plot", indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+            }
             refreshSd1sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
             refreshSd2sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
           })
         }
       }
-    })
-    
-    observeEvent(input$sliderInterp, {
-      interpolationValue <<- input$sliderInterp
     })
     
     observeEvent(input$interpolateButton, {
@@ -146,6 +167,39 @@ shinyServer(function(input, output, session){
           PlotHR(hrv.data, Indexes="all", main="Interpolated data")
         })
       }
+    })
+    
+    observeEvent(input$sliderInterp, {
+      interpolationValue <<- input$sliderInterp
+    })
+    
+    observeEvent(input$poincarexMax, {
+      poincarexMax <<- input$poincarexMax
+      timeLineX <<- c(poincarexMin, poincarexMax)
+    })
+    
+    observeEvent(input$poincarexMin, {
+      poincarexMin <<- input$poincarexMin
+      timeLineX <<- c(poincarexMin, poincarexMax)
+    })
+    
+    observeEvent(input$poincareyMax, {
+      poincareyMax <<- input$poincareyMax
+      timeLineY <<- c(poincareyMin, poincareyMax)
+    })
+    
+    observeEvent(input$poincareyMin, {
+      poincareyMin <<- input$poincareyMin
+      timeLineY <<- c(poincareyMin, poincareyMax)
+    })
+    
+    observeEvent(input$poinCustomPlot, {
+      if(input$poinCustomPlot == TRUE){
+        enablePlotOptions()
+      }else{
+        disablePlotOptions()
+      }
+      repaintPoincareCompare()
     })
     
     refreshSd1 <- function(data){
@@ -169,6 +223,35 @@ shinyServer(function(input, output, session){
     refreshSd2sec <- function(data){
       output$sd2sec <- renderText({
         paste("SD2: ",data)
+      })
+    }
+    
+    disablePlotOptions <- function(){
+      customPlotAxis <<- FALSE
+      shinyjs::disable("poincarexMin")
+      shinyjs::disable("poincarexMax")
+      shinyjs::disable("poincareyMin")
+      shinyjs::disable("poincareyMax")
+    }
+    
+    enablePlotOptions <- function(){
+      customPlotAxis <<- TRUE
+      shinyjs::enable("poincarexMin")
+      shinyjs::enable("poincarexMax")
+      shinyjs::enable("poincareyMin")
+      shinyjs::enable("poincareyMax")
+    }
+    
+    repaintPoincareCompare <- function(){
+      output$secondaryPoinPlot<-renderPlot({
+        if(customPlotAxis){
+          pointcareData = PoincarePlot(hrv.episode, doPlot = T, main="Secondary Plot", indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
+                                       xlim=timeLineX, ylim=timeLineY)
+        }else{
+          pointcareData = PoincarePlot(hrv.episode, doPlot = T, main="Secondary Plot", indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+        }
+        refreshSd1sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
+        refreshSd2sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
       })
     }
   })

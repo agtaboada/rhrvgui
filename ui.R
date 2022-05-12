@@ -7,7 +7,7 @@ library(tkrplot)
 library(stringr)
 
 ui<-fluidPage(
-  useShinyjs(),
+  shinyjs::useShinyjs(),
   tags$link(rel = "stylesheet", type="text/css", href="css/style.css"),
   navbarPage("RHRV GUI", id="mainTabSelect",
     tabPanel("Main menu",
@@ -116,6 +116,20 @@ ui<-fluidPage(
                                 ),
                                 fluidRow(
                                   sliderInput("sliderInterp", "Frequency", min=1, max=25, value=4, step = 0.1)
+                                ),
+                                fluidRow(
+                                  h4("Poincare")
+                                ),
+                                fluidRow(
+                                  checkboxInput("poinCustomPlot", "Use custom axis values", FALSE)
+                                ),
+                                fluidRow(
+                                  column(2,numericInput("poincarexMin", "Min. X", -800, width="100px")),
+                                  column(2,numericInput("poincarexMax", "Max. X", 800, width="100px"))
+                                ),
+                                fluidRow(
+                                  column(2, numericInput("poincareyMin", "Min. Y", -800, width="100px")),
+                                  column(2, numericInput("poincareyMax", "Max. Y", 800,  width="100px"))
                                 )
                       )
              ),)
