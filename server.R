@@ -2,6 +2,7 @@ shinyServer(function(input, output, session){
     hrv.data <- NULL
     beatSelected <<- FALSE
     episodesSelected <<- FALSE
+    beatInterpolated <<- FALSE
     interpolationValue <<- 4
     timeLineX <<- c(-800, 800)
     timeLineY <<- c(-800, 800)
@@ -23,6 +24,8 @@ shinyServer(function(input, output, session){
         return(NULL)
       }else{
         beatSelected <<- TRUE
+        beatInterpolated <<- FALSE
+        episodesSelected <<- FALSE
         datapath <- parseFilePaths(volumes, file())$datapath
         datapath <- gsub("/",.Platform$file.sep, datapath)
         datapath <- gsub(basename(datapath), "", datapath)
@@ -94,6 +97,17 @@ shinyServer(function(input, output, session){
             }
           }
         }
+      if(input$mainTabSelect == "frameTab"){
+        output$framePlot <- {
+          if(beatSelected && beatInterpolated){
+            renderPlot({
+              hrv.data = CreateFreqAnalysis(hrv.data)
+              hrv.data = CalculatePowerBand( hrv.data , indexFreqAnalysis= 1, type = "wavelet", wavelet = "la8", bandtolerance = 0.01, relative = FALSE)
+              PlotPowerBand(hrv.data, indexFreqAnalysis = 1)
+            })
+          }
+        }
+      }
     })
     
     observeEvent(input$poincareEpisodes, {
@@ -163,6 +177,7 @@ shinyServer(function(input, output, session){
     observeEvent(input$interpolateButton, {
       if(beatSelected){
         hrv.data <<- InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
+        beatInterpolated <<- TRUE
         output$mainGraph<-renderPlot({
           PlotHR(hrv.data, Indexes="all", main="Interpolated data")
         })
