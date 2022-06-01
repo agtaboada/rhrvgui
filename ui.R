@@ -67,7 +67,11 @@ ui<-fluidPage(
                        )
              )         
     ),
-    tabPanel("Frame-based evolution"),
+    tabPanel(id="panelFrame", value="frameTab", "Frame-based evolution",
+             fluidPage(
+               useShinyjs(),
+               sidebarPanel(id="frameSidebar")
+             )),
     tabPanel("Report"),
     tabPanel(id="panelPoincare", value="poinTab", "Poincare plot",
              fluidPage(
