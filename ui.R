@@ -70,18 +70,25 @@ ui<-fluidPage(
     tabPanel(id="panelFrame", value="frameTab", "Frame-based evolution",
              fluidPage(
                useShinyjs(),
-               sidebarPanel(id="frameSidebar"),
+               sidebarPanel(id="frameSidebar",
+                            h5("Visible Bands"),
+                              checkboxInput("lfhf", "LF/HF", TRUE),
+                              checkboxInput("ulf", "ULF", TRUE),
+                              checkboxInput("vlf", "VLF", TRUE),
+                              checkboxInput("hf", "HF", TRUE),
+                              checkboxInput("lf", "LF", TRUE)
+               ),
                mainPanel(
-                 plotOutput("framePlot",
-                            width = "900px",
-                            height = "900px",
-                            click = NULL,
-                            dblclick = NULL,
-                            hover = NULL,
-                            brush = NULL,
-                            inline = FALSE)
+                 fluidRow(
+                   plotOutput("lfhfPlot", width = "1000px",height = "180px",inline = FALSE),
+                   plotOutput("ulfPlot", width = "1000px",height = "180px",inline = FALSE),
+                   plotOutput("vlfPlot", width = "1000px",height = "180px",inline = FALSE),
+                   plotOutput("hfPlot", width = "1000px",height = "180px",inline = FALSE),
+                   plotOutput("lfPlot", width = "1000px",height = "180px",inline = FALSE)
+                 )
                )
-             )),
+             )
+    ),
     tabPanel("Report"),
     tabPanel(id="panelPoincare", value="poinTab", "Poincare plot",
              fluidPage(
@@ -95,7 +102,7 @@ ui<-fluidPage(
                  textOutput("sd2"),
                  h5(tags$b("SDs secondary plot")),
                  textOutput("sd1sec"),
-                 textOutput("sd2sec"),
+                 textOutput("sd2sec")
                ),
                mainPanel(
                  tabsetPanel(
@@ -146,6 +153,6 @@ ui<-fluidPage(
                                   column(2, numericInput("poincareyMax", "Max. Y", 800,  width="100px"))
                                 )
                       )
-             ),)
+             ))
 
 ))

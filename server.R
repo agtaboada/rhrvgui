@@ -6,6 +6,8 @@ shinyServer(function(input, output, session){
     interpolationValue <<- 4
     timeLineX <<- c(-800, 800)
     timeLineY <<- c(-800, 800)
+    poincarexMin <<- -800
+    poincareyMin <<- 800
     customPlotAxis <<- FALSE
     hrv.episode <<- NULL
     
@@ -98,13 +100,20 @@ shinyServer(function(input, output, session){
           }
         }
       if(input$mainTabSelect == "frameTab"){
-        output$framePlot <- {
-          if(beatSelected && beatInterpolated){
-            renderPlot({
-              hrv.data = CreateFreqAnalysis(hrv.data)
-              hrv.data = CalculatePowerBand( hrv.data , indexFreqAnalysis= 1, type = "wavelet", wavelet = "la8", bandtolerance = 0.01, relative = FALSE)
-              PlotPowerBand(hrv.data, indexFreqAnalysis = 1)
-            })
+        if(beatSelected && beatInterpolated){
+          hrv.data = CreateFreqAnalysis(hrv.data)
+          hrv.data = CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = 300, shift = 60, sizesp = 1024)
+          if(input$lfhf){
+              output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF", epColorPalette = "red",
+              epLegendCoords = c(2000,7500))})
+              output$ulfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", epColorPalette = "red",
+                                                                 epLegendCoords = c(2000,7500))})
+              output$vlfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", epColorPalette = "red",
+                                                                epLegendCoords = c(2000,7500))})
+              output$hfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "HF", epColorPalette = "red",
+                                                                epLegendCoords = c(2000,7500))})
+              output$lfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF", epColorPalette = "red",
+                                                               epLegendCoords = c(2000,7500))})
           }
         }
       }
@@ -256,6 +265,46 @@ shinyServer(function(input, output, session){
       shinyjs::enable("poincareyMin")
       shinyjs::enable("poincareyMax")
     }
+    
+    observeEvent(input$lf, {
+      if(input$lf == FALSE){
+        hideElement(id = "lfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }else{
+        showElement(id = "lfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }
+    })
+    
+    observeEvent(input$hf, {
+      if(input$hf == FALSE){
+        hideElement(id = "hfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }else{
+        showElement(id = "hfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }
+    })
+    
+    observeEvent(input$vlf, {
+      if(input$vlf == FALSE){
+        hideElement(id = "vlfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }else{
+        showElement(id = "vlfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }
+    })
+    
+    observeEvent(input$ulf, {
+      if(input$ulf == FALSE){
+        hideElement(id = "ulfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }else{
+        showElement(id = "ulfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }
+    })
+    
+    observeEvent(input$lfhf, {
+      if(input$lfhf == FALSE){
+        hideElement(id = "lfhfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }else{
+        showElement(id = "lfhfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }
+    })
     
     repaintPoincareCompare <- function(){
       output$secondaryPoinPlot<-renderPlot({
