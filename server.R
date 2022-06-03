@@ -7,10 +7,15 @@ shinyServer(function(input, output, session){
     timeLineX <<- c(-800, 800)
     timeLineY <<- c(-800, 800)
     poincarexMin <<- -800
-    poincareyMin <<- 800
+    poincareyMin <<- -800
+    poincarexMax <<- 800
+    poincareYMax <<- 800
     customPlotAxis <<- FALSE
     significanceAnalysis <<- FALSE
     hrv.episode <<- NULL
+    
+    shinyjs::disable("sigAnBt")
+    hideElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
     
     volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
     
@@ -21,7 +26,7 @@ shinyServer(function(input, output, session){
     hrv.data = CreateHRVData()
     hrv.data = SetVerbose(hrv.data, TRUE)
     
-    observeEvent(input$loadHrButton, { 
+    observeEvent(input$loadHrButton, {
       file <- reactive(input$loadHrButton)
       if(length(file()) > 0 & is.numeric(file())){
         return(NULL)
@@ -77,6 +82,7 @@ shinyServer(function(input, output, session){
     })
     
     observeEvent(input$clearEpButton, {
+        shinyjs::disable("sigAnBt")
         output$mainGraph<-renderPlot({
           PlotNIHR(hrv.data, main="Data")
         })
@@ -101,20 +107,31 @@ shinyServer(function(input, output, session){
           }
         }
       if(input$mainTabSelect == "frameTab"){
+        initializeFrameInputs()
         if(beatSelected && beatInterpolated){
+          if(episodesSelected){
+            shinyjs::enable("sigAnBt")
+          }
           hrv.data = CreateFreqAnalysis(hrv.data)
           hrv.data = CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = 300, shift = 60, sizesp = 1024)
-          if(input$lfhf){
-              output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF", epColorPalette = "red",
-              epLegendCoords = c(2000,7500))})
-              output$ulfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", epColorPalette = "red",
+          listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
+          print("LISTA DE EPISODIOS")
+          print(listOfEpisodeOptions)
+          if(input$lfhf){#todo: checkear por que indexes no funcionan
+              output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",Indexes=NULL, markEpisodes = T,
+                                                                 epColorPalette = "red")})
+              output$ulfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", Indexes=NULL, epColorPalette = "red",
                                                                  epLegendCoords = c(2000,7500))})
-              output$vlfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", epColorPalette = "red",
+              output$vlfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", Indexes=NULL, epColorPalette = "red",
                                                                 epLegendCoords = c(2000,7500))})
-              output$hfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "HF", epColorPalette = "red",
+              output$hfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "HF",Indexes=NULL, epColorPalette = "red",
                                                                 epLegendCoords = c(2000,7500))})
-              output$lfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF", epColorPalette = "red",
+              output$lfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF", Indexes=NULL, epColorPalette = "red",
                                                                epLegendCoords = c(2000,7500))})
+          }
+          if(episodesSelected){
+            updateSelectInput(session, "significanceEpisodes", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[0])
+            updateSelectInput(session, "significanceComparing", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[1])
           }
         }
       }
@@ -308,12 +325,17 @@ shinyServer(function(input, output, session){
     })
     
     observeEvent(input$sigAnBt, {
+      significanceAnalysis <<- !significanceAnalysis
       if(significanceAnalysis == TRUE){
         showElement(id="significanceRow", anim = TRUE, animType="fade", time=0.4, selector=NULL, asis = FALSE)
+        showElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
         hideElement(id="mainFrameRow", anim=TRUE, animType="fade", time=0.4, selector="NULL", asis=FALSE)
+        updateActionButton(session, "sigAnBt",label = "Back")
       }else{
-        hideElement(id="mainFrameRow", anim=TRUE, animType="fade", time=0.4, selector="NULL", asis=FALSE)
-        showElement(id="significanceRow", anim = TRUE, animType="fade", time=0.4, selector=NULL, asis = FALSE)
+        hideElement(id="significanceRow", anim=TRUE, animType="fade", time=0.4, selector="NULL", asis=FALSE)
+        hideElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+        showElement(id="mainFrameRow", anim = TRUE, animType="fade", time=0.4, selector=NULL, asis = FALSE)
+        updateActionButton(session, "sigAnBt",label = "Significance Analysis")
       }
     })
     
@@ -328,6 +350,11 @@ shinyServer(function(input, output, session){
         refreshSd1sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
         refreshSd2sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
       })
+    }
+    
+    initializeFrameInputs <- function(){
+      hideElement(id="significanceRow", anim=TRUE, animType="fade", time=0.4, selector="NULL", asis=FALSE)
+      hideElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
     }
   })
 

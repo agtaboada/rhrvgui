@@ -57,7 +57,7 @@ ui<-fluidPage(
                        fluidRow(
                          plotOutput("mainGraph",
                                     width = "100%",
-                                    height = "400px",
+                                    height = "800px",
                                     click = NULL,
                                     dblclick = NULL,
                                     hover = NULL,
@@ -71,13 +71,20 @@ ui<-fluidPage(
              fluidPage(
                useShinyjs(),
                sidebarPanel(id="frameSidebar",
-                            h5("Visible Bands"),
-                              checkboxInput("lfhf", "LF/HF", TRUE),
-                              checkboxInput("ulf", "ULF", TRUE),
-                              checkboxInput("vlf", "VLF", TRUE),
-                              checkboxInput("hf", "HF", TRUE),
-                              checkboxInput("lf", "LF", TRUE),
+                            fluidRow(
+                              h5("Visible Bands"),
+                                checkboxInput("lfhf", "LF/HF", TRUE),
+                                checkboxInput("ulf", "ULF", TRUE),
+                                checkboxInput("vlf", "VLF", TRUE),
+                                checkboxInput("hf", "HF", TRUE),
+                                checkboxInput("lf", "LF", TRUE),
+                            ),fluidRow(id="significanceOptions",
+                                selectInput("significanceEpisodes", "Episodes", "", width="180px"),
+                                selectInput("significanceComparing", "CompareTo", "", width="180px"),
+                                textOutput("significanceText")
+                            ),fluidRow(
                               actionButton("sigAnBt", "Significance Analysis")
+                            )
                ),
                mainPanel(
                  fluidRow(id="mainFrameRow",
