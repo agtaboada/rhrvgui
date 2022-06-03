@@ -9,6 +9,7 @@ shinyServer(function(input, output, session){
     poincarexMin <<- -800
     poincareyMin <<- 800
     customPlotAxis <<- FALSE
+    significanceAnalysis <<- FALSE
     hrv.episode <<- NULL
     
     volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
@@ -303,6 +304,16 @@ shinyServer(function(input, output, session){
         hideElement(id = "lfhfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
       }else{
         showElement(id = "lfhfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }
+    })
+    
+    observeEvent(input$sigAnBt, {
+      if(significanceAnalysis == TRUE){
+        showElement(id="significanceRow", anim = TRUE, animType="fade", time=0.4, selector=NULL, asis = FALSE)
+        hideElement(id="mainFrameRow", anim=TRUE, animType="fade", time=0.4, selector="NULL", asis=FALSE)
+      }else{
+        hideElement(id="mainFrameRow", anim=TRUE, animType="fade", time=0.4, selector="NULL", asis=FALSE)
+        showElement(id="significanceRow", anim = TRUE, animType="fade", time=0.4, selector=NULL, asis = FALSE)
       }
     })
     

@@ -76,18 +76,22 @@ ui<-fluidPage(
                               checkboxInput("ulf", "ULF", TRUE),
                               checkboxInput("vlf", "VLF", TRUE),
                               checkboxInput("hf", "HF", TRUE),
-                              checkboxInput("lf", "LF", TRUE)
+                              checkboxInput("lf", "LF", TRUE),
+                              actionButton("sigAnBt", "Significance Analysis")
                ),
                mainPanel(
-                 fluidRow(
+                 fluidRow(id="mainFrameRow",
                    plotOutput("lfhfPlot", width = "1000px",height = "180px",inline = FALSE),
                    plotOutput("ulfPlot", width = "1000px",height = "180px",inline = FALSE),
                    plotOutput("vlfPlot", width = "1000px",height = "180px",inline = FALSE),
                    plotOutput("hfPlot", width = "1000px",height = "180px",inline = FALSE),
                    plotOutput("lfPlot", width = "1000px",height = "180px",inline = FALSE)
-                 )
-               )
+                 ),
+                fluidRow(id="significanceRow",
+                  plotOutput("frameHistogram", width="1000px", height="700px", inline = FALSE)
+                )
              )
+          )
     ),
     tabPanel("Report"),
     tabPanel(id="panelPoincare", value="poinTab", "Poincare plot",
