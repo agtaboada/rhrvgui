@@ -83,6 +83,8 @@ shinyServer(function(input, output, session){
     
     observeEvent(input$clearEpButton, {
         shinyjs::disable("sigAnBt")
+        hrv.data <<- RemoveEpisodes(hrv.data, Tags = "all", Indexes = "all")
+        episodesSelected <<- FALSE
         output$mainGraph<-renderPlot({
           PlotNIHR(hrv.data, main="Data")
         })
@@ -115,11 +117,9 @@ shinyServer(function(input, output, session){
           hrv.data = CreateFreqAnalysis(hrv.data)
           hrv.data = CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = 300, shift = 60, sizesp = 1024)
           listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
-          print("LISTA DE EPISODIOS")
-          print(listOfEpisodeOptions)
           if(input$lfhf){#todo: checkear por que indexes no funcionan
-              output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",Indexes=NULL, markEpisodes = T,
-                                                                 epColorPalette = "red")})
+              output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",Indexes=NULL,
+                                                                 epColorPalette = "red", epLegendCoords = c(2000,7500))})
               output$ulfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", Indexes=NULL, epColorPalette = "red",
                                                                  epLegendCoords = c(2000,7500))})
               output$vlfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", Indexes=NULL, epColorPalette = "red",
@@ -133,49 +133,54 @@ shinyServer(function(input, output, session){
             updateSelectInput(session, "significanceEpisodes", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[0])
             updateSelectInput(session, "significanceComparing", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[1])
           }
+          output$frameHistogram <- renderPlot(hrv.data = CalculateCorrDim(hrv.data,indexNonLinearAnalysis=1,
+                                                                          minEmbeddingDim=2, maxEmbeddingDim=8,timeLag=1,minRadius=1,
+                                                                          maxRadius=15, pointsRadius=20,theilerWindow=10,
+                                                                          corrOrder=2,doPlot=T))
         }
       }
     })
     
     observeEvent(input$poincareEpisodes, {
-      hrv.data = CreateNonLinearAnalysis(hrv.data)
-      if(input$poincareEpisodes == "GLOBAL"){
-        updateSelectInput(session, "poincareComparing", choices = ListEpisodes(hrv.data)["Tag"])
-        output$mainPoinPlot <- {
-          renderPlot({
-            if(customPlotAxis){
-              pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
-                                           xlim=timeLineX, ylim=timeLineY, verbose=NULL)
-            }else{
-              PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL)
-            }
-            refreshSd1(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
-            refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
-          })
-        }
-      }else{
-        updateSelectInput(session, "poincareComparing", choices="")
-        output$mainPoinPlot <- {
-          if(episodesSelected){
-            hrv.episode = CreateHRVData(Verbose = TRUE)
-            hrv.data = InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
-            episodesVector = SplitHRbyEpisodes(hrv.data, T=str_replace_all(input$poincareEpisodes, fixed(" "), ""), verbose=NULL)
-            hrv.episode = LoadBeatVector(hrv.episode, episodesVector$InEpisodes)
-            hrv.episode = BuildNIHR(hrv.episode, verbose=NULL)
-            hrv.episode = CreateNonLinearAnalysis(hrv.episode)
+      if(beatSelected){
+        hrv.data = CreateNonLinearAnalysis(hrv.data)
+        if(input$poincareEpisodes == "GLOBAL"){
+          updateSelectInput(session, "poincareComparing", choices = ListEpisodes(hrv.data)["Tag"])
+          output$mainPoinPlot <- {
             renderPlot({
               if(customPlotAxis){
-                pointcareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, xlim=timeLineX,
-                                             ylim=timeLineY, verbose=NULL)
+                pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
+                                             xlim=timeLineX, ylim=timeLineY, verbose=NULL)
               }else{
-                poincareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL)
+                PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL)
               }
               refreshSd1(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
               refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
             })
           }
-        }}
-    })
+        }else{
+          updateSelectInput(session, "poincareComparing", choices="")
+          output$mainPoinPlot <- {
+            if(episodesSelected){
+              hrv.episode = CreateHRVData(Verbose = TRUE)
+              hrv.data = InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
+              episodesVector = SplitHRbyEpisodes(hrv.data, T=str_replace_all(input$poincareEpisodes, fixed(" "), ""), verbose=NULL)
+              hrv.episode = LoadBeatVector(hrv.episode, episodesVector$InEpisodes)
+              hrv.episode = BuildNIHR(hrv.episode, verbose=NULL)
+              hrv.episode = CreateNonLinearAnalysis(hrv.episode)
+              renderPlot({
+                if(customPlotAxis){
+                  pointcareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, xlim=timeLineX,
+                                               ylim=timeLineY, verbose=NULL)
+                }else{
+                  poincareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL)
+                }
+                refreshSd1(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
+                refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
+              })
+            }
+          }}
+    }})
     
     
     observeEvent(input$poincareComparing, {
