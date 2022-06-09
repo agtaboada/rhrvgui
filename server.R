@@ -114,29 +114,25 @@ shinyServer(function(input, output, session){
           if(episodesSelected){
             shinyjs::enable("sigAnBt")
           }
-          hrv.data = CreateFreqAnalysis(hrv.data)
+          hrv.data = CreateFreqAnalysis(hrv.data, verbose = F)
           hrv.data = CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = 300, shift = 60, sizesp = 1024)
           listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
           if(input$lfhf){#todo: checkear por que indexes no funcionan
-              output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",Indexes=NULL,
-                                                                 epColorPalette = "red", epLegendCoords = c(2000,7500))})
-              output$ulfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", Indexes=NULL, epColorPalette = "red",
+              output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
+                                                                 epColorPalette = "red")})
+              output$ulfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", epColorPalette = "red",
                                                                  epLegendCoords = c(2000,7500))})
-              output$vlfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", Indexes=NULL, epColorPalette = "red",
+              output$vlfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", epColorPalette = "red",
                                                                 epLegendCoords = c(2000,7500))})
-              output$hfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "HF",Indexes=NULL, epColorPalette = "red",
+              output$hfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "HF", epColorPalette = "red",
                                                                 epLegendCoords = c(2000,7500))})
-              output$lfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF", Indexes=NULL, epColorPalette = "red",
+              output$lfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF", epColorPalette = "red",
                                                                epLegendCoords = c(2000,7500))})
           }
           if(episodesSelected){
             updateSelectInput(session, "significanceEpisodes", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[0])
             updateSelectInput(session, "significanceComparing", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[1])
           }
-          output$frameHistogram <- renderPlot(hrv.data = CalculateCorrDim(hrv.data,indexNonLinearAnalysis=1,
-                                                                          minEmbeddingDim=2, maxEmbeddingDim=8,timeLag=1,minRadius=1,
-                                                                          maxRadius=15, pointsRadius=20,theilerWindow=10,
-                                                                          corrOrder=2,doPlot=T))
         }
       }
     })
@@ -208,7 +204,7 @@ shinyServer(function(input, output, session){
     
     observeEvent(input$interpolateButton, {
       if(beatSelected){
-        hrv.data <<- InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
+        hrv.data <<- InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=FALSE)
         beatInterpolated <<- TRUE
         output$mainGraph<-renderPlot({
           PlotHR(hrv.data, Indexes="all", main="Interpolated data")
