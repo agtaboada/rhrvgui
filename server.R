@@ -134,6 +134,8 @@ shinyServer(function(input, output, session){
           if(episodesSelected){
             shinyjs::enable("sigAnBt")
             listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
+            updateSelectInput(session, "significanceEpisodes", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[0])
+            updateSelectInput(session, "significanceComparing", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[1])
           }
           hrv.data = CreateFreqAnalysis(hrv.data, verbose = F)
           hrv.data = CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = 300, shift = 60, sizesp = 1024)
@@ -149,10 +151,8 @@ shinyServer(function(input, output, session){
               output$lfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF", epColorPalette = "red",
                                                                epLegendCoords = c(2000,7500))})
           }
-          if(episodesSelected){
-            updateSelectInput(session, "significanceEpisodes", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[0])
-            updateSelectInput(session, "significanceComparing", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[1])
-          }
+        }else{
+          showNotification("Please, select a beat and interpolate it to use this menu.",type='warning')
         }
       }
     })
@@ -195,13 +195,14 @@ shinyServer(function(input, output, session){
                 refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
               })
             }
-          }}
+          }
+        }
     }})
     
     
     observeEvent(input$poincareComparing, {
-      output$secondaryPoinPlot <- {
-        if(episodesSelected){
+      if(episodesSelected){
+        output$secondaryPoinPlot <- {
           hrv.episode <<- CreateHRVData(Verbose = TRUE)
           hrv.data = InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
           episodesVector = SplitHRbyEpisodes(hrv.data, T=str_replace_all(input$poincareComparing, fixed(" "), ""), verbose=NULL)
@@ -361,16 +362,18 @@ shinyServer(function(input, output, session){
     })
     
     repaintPoincareCompare <- function(){
-      output$secondaryPoinPlot<-renderPlot({
-        if(customPlotAxis){
-          pointcareData = PoincarePlot(hrv.episode, doPlot = T, main="Secondary Plot", indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
-                                       xlim=timeLineX, ylim=timeLineY)
-        }else{
-          pointcareData = PoincarePlot(hrv.episode, doPlot = T, main="Secondary Plot", indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
-        }
-        refreshSd1sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
-        refreshSd2sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
-      })
+      if(episodesSelected){
+        output$secondaryPoinPlot<-renderPlot({
+          if(customPlotAxis){
+            pointcareData = PoincarePlot(hrv.episode, doPlot = T, main="Secondary Plot", indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
+                                         xlim=timeLineX, ylim=timeLineY)
+          }else{
+            pointcareData = PoincarePlot(hrv.episode, doPlot = T, main="Secondary Plot", indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE)
+          }
+          refreshSd1sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
+          refreshSd2sec(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
+        })
+      }
     }
     
     initializeFrameInputs <- function(){
