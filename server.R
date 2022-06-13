@@ -13,8 +13,15 @@ shinyServer(function(input, output, session){
     customPlotAxis <<- FALSE
     significanceAnalysis <<- FALSE
     hrv.episode <<- NULL
+    loadingFileErrorStr <<- "Error loading the file: make sure you are using the proper file extension and data format."
     
     shinyjs::disable("sigAnBt")
+    shinyjs::disable("filterHrButton")
+    shinyjs::disable("editHrButton")
+    shinyjs::disable("loadEpButton")
+    shinyjs::disable("clearEpButton")
+    shinyjs::disable("interpolateButton")
+    
     hideElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
     
     volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
@@ -37,12 +44,19 @@ shinyServer(function(input, output, session){
         datapath <- parseFilePaths(volumes, file())$datapath
         datapath <- gsub("/",.Platform$file.sep, datapath)
         datapath <- gsub(basename(datapath), "", datapath)
-        hrv.data = LoadBeatAscii(hrv.data, parseFilePaths(volumes, file())$name, datapath)
-        hrv.data = BuildNIHR(hrv.data)
-        hrv.data <<- hrv.data
-        output$mainGraph<-renderPlot({
-          PlotNIHR(hrv.data)
-          })
+        tryCatch({hrv.data = LoadBeatAscii(hrv.data, parseFilePaths(volumes, file())$name, datapath)
+                  hrv.data = BuildNIHR(hrv.data)
+                  hrv.data <<- hrv.data
+                  shinyjs::enable("filterHrButton")
+                  shinyjs::enable("editHrButton")
+                  shinyjs::enable("loadEpButton")
+                  shinyjs::enable("interpolateButton")
+                  output$mainGraph<-renderPlot({
+                    PlotNIHR(hrv.data)
+                  })
+        },error = function(e){
+          showNotification(loadingFileErrorStr, type = 'err')
+        })
       }
     })
     
@@ -69,15 +83,20 @@ shinyServer(function(input, output, session){
         datapath <- parseFilePaths(volumes, file())$datapath
         datapath <- gsub("/",.Platform$file.sep, datapath)
         datapath <- gsub(basename(datapath), "", datapath)
-        hrv.data <<- LoadEpisodesAscii(hrv.data, parseFilePaths(volumes, file())$name, datapath)
-        hrv.data <<- hrv.data
-        listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
-        listOfEpisodeOptions <- append(listOfEpisodeOptions, "GLOBAL")
-        updateSelectInput(session, "poincareEpisodes", choices = listOfEpisodeOptions, selected="GLOBAL")
-        episodesSelected <<- TRUE
-        output$mainGraph<-renderPlot({
-          PlotNIHR(hrv.data, Indexes="all", main="Data with episodes")
+        tryCatch({hrv.data <<- LoadEpisodesAscii(hrv.data, parseFilePaths(volumes, file())$name, datapath)
+                  hrv.data <<- hrv.data
+                  listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
+                  listOfEpisodeOptions <- append(listOfEpisodeOptions, "GLOBAL")
+                  updateSelectInput(session, "poincareEpisodes", choices = listOfEpisodeOptions, selected="GLOBAL")
+                  episodesSelected <<- TRUE
+                  shinyjs::enable("clearEpButton")
+                  output$mainGraph<-renderPlot({
+                    PlotNIHR(hrv.data, Indexes="all", main="Data with episodes")
+                  })
+        },error = function(e){
+          showNotification(loadingFileErrorStr, type = 'err')
         })
+          
       }
     })
     
@@ -85,6 +104,7 @@ shinyServer(function(input, output, session){
         shinyjs::disable("sigAnBt")
         hrv.data <<- RemoveEpisodes(hrv.data, Tags = "all", Indexes = "all")
         episodesSelected <<- FALSE
+        shinyjs::disable("clearEpButton")
         output$mainGraph<-renderPlot({
           PlotNIHR(hrv.data, main="Data")
         })
@@ -113,10 +133,10 @@ shinyServer(function(input, output, session){
         if(beatSelected && beatInterpolated){
           if(episodesSelected){
             shinyjs::enable("sigAnBt")
+            listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
           }
           hrv.data = CreateFreqAnalysis(hrv.data, verbose = F)
           hrv.data = CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = 300, shift = 60, sizesp = 1024)
-          listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
           if(input$lfhf){#todo: checkear por que indexes no funcionan
               output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
                                                                  epColorPalette = "red")})
