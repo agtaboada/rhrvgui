@@ -92,7 +92,9 @@ ui<-fluidPage(
                    plotOutput("ulfPlot", width = "1000px",height = "180px",inline = FALSE),
                    plotOutput("vlfPlot", width = "1000px",height = "180px",inline = FALSE),
                    plotOutput("hfPlot", width = "1000px",height = "180px",inline = FALSE),
-                   plotOutput("lfPlot", width = "1000px",height = "180px",inline = FALSE)
+                   plotOutput("lfPlot", width = "1000px",height = "180px",inline = FALSE),
+                   plotOutput("hrPlot", width = "1000px", height = "180px", inline = F),
+                   plotOutput("testPlot",  width = "1000px", height = "180px", inline = F)
                  ),
                 fluidRow(id="significanceRow",
                   plotOutput("frameHistogram", width="1000px", height="700px", inline = FALSE)
