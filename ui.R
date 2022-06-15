@@ -100,7 +100,22 @@ ui<-fluidPage(
              )
           )
     ),
-    tabPanel("Report"),
+    tabPanel(id="panelReport", value="reportTab", "Report",
+             fluidPage(
+               mainPanel(
+                 fluidRow(
+                   h4("File details")
+                 ),
+                 fluidRow(
+                   textOutput("fileName", inline=TRUE),
+                   textOutput("signalLength", inline=TRUE)
+                 ),
+                 fluidRow(
+                   plotOutput("reportFilePlot", width = "80%", height = "500px", click = NULL, dblclick = NULL, hover = NULL, brush = NULL, inline = FALSE)
+                 )
+               )
+             )
+    ),
     tabPanel(id="panelPoincare", value="poinTab", "Poincare plot",
              fluidPage(
                useShinyjs(),
@@ -162,6 +177,7 @@ ui<-fluidPage(
                                   column(2, numericInput("poincareyMax", "Max. Y", 800,  width="100px"))
                                 )
                       )
-             ))
+             )
+    )
 
 ))

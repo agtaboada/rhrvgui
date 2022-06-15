@@ -13,6 +13,7 @@ shinyServer(function(input, output, session){
     customPlotAxis <<- FALSE
     significanceAnalysis <<- FALSE
     hrv.episode <<- NULL
+    fileName <<- NULL
     loadingFileErrorStr <<- "Error loading the file: make sure you are using the proper file extension and data format."
     
     shinyjs::disable("sigAnBt")
@@ -44,6 +45,7 @@ shinyServer(function(input, output, session){
         datapath <- parseFilePaths(volumes, file())$datapath
         datapath <- gsub("/",.Platform$file.sep, datapath)
         datapath <- gsub(basename(datapath), "", datapath)
+        fileName <<- parseFilePaths(volumes, file())$name
         tryCatch({hrv.data = LoadBeatAscii(hrv.data, parseFilePaths(volumes, file())$name, datapath)
                   hrv.data = BuildNIHR(hrv.data)
                   hrv.data <<- hrv.data
@@ -141,8 +143,6 @@ shinyServer(function(input, output, session){
           hrv.data <- CreateFreqAnalysis(hrv.data)
           hrv.data = CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = 300, shift = 60, sizesp = 1024)
           hrv.data <- CreateTimeAnalysis(hrv.data, size=300, numofbins=NULL, interval=7.8125, verbose=NULL )
-          print(hrv.data$TimeAnalysis[[1]])
-          x = 
           if(input$lfhf){#todo: checkear por que indexes no funcionan
               output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
                                                                  epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "")})
@@ -157,7 +157,23 @@ shinyServer(function(input, output, session){
               output$hrPlot <- renderPlot({PlotHR(hrv.data, Tags = "all", xlab = "time (sec.)", ylab = "Heart Rate", main = "", type = "l")})
           }
         }else{
-          showNotification("Please, select a beat and interpolate it to use this menu.",type='warning')
+          showNotification("Please, select a beat and interpolate it to use this menu.", type='warning')
+        }
+      }
+      if(input$mainTabSelect == "reportTab"){
+        if(beatSelected){
+          episodesValue <- NULL
+          if(episodesSelected == TRUE){
+            episodesValue <- "all"
+          }
+          print(episodesValue)
+          hrv.data <- InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
+          hrv.data <- CreateTimeAnalysis(hrv.data, size=300, numofbins=NULL, interval=7.8125, verbose=NULL )
+          output$fileName <- renderText({ paste("Name: ", fileName)})
+          output$signalLength <- renderText({ paste("Signal length: ", max(hrv.data$Beat[["Time"]]))})
+          output$reportFilePlot <- renderPlot({PlotHR(hrv.data, Indexes=episodesValue, main=paste(fileName, " - Interpolated HR"))})
+        }else{
+          showNotification("Please, load some beat data in order to use this menu.", type='warning')
         }
       }
     })
