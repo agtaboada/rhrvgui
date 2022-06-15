@@ -155,7 +155,6 @@ shinyServer(function(input, output, session){
               output$lfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF", epColorPalette = "red",
                                                                epLegendCoords = c(2000,7500), ylab = "LF", main = "", xlab="")})
               output$hrPlot <- renderPlot({PlotHR(hrv.data, Tags = "all", xlab = "time (sec.)", ylab = "Heart Rate", main = "", type = "l")})
-              output$testPlot <- renderPlot({plotNormalHistogram(mean(hrv.data$TimeAnalysis[[1]]$pNN50))})
           }
         }else{
           showNotification("Please, select a beat and interpolate it to use this menu.",type='warning')
@@ -349,6 +348,14 @@ shinyServer(function(input, output, session){
         hideElement(id = "lfhfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
       }else{
         showElement(id = "lfhfPlot", anim = TRUE, animType = "fade", time = 0.4, selector = NULL, asis = FALSE)
+      }
+    })
+    
+    observeEvent(input$hr, {
+      if(input$hr == FALSE){
+        hideElement(id = "hrPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+      }else{
+        showElement(id = "hrPlot", anim = TRUE, animType = "fade", time = 0.4, selector = NULL, asis = FALSE)
       }
     })
     

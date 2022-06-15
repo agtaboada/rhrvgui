@@ -76,6 +76,7 @@ ui<-fluidPage(
                                 checkboxInput("vlf", "VLF", TRUE),
                                 checkboxInput("hf", "HF", TRUE),
                                 checkboxInput("lf", "LF", TRUE),
+                                checkboxInput("hr", "HR", TRUE)
                             ),fluidRow(id="significanceOptions",
                                 selectInput("significanceEpisodes", "Episodes", "", width="180px"),
                                 selectInput("significanceComparing", "CompareTo", "", width="180px"),
@@ -91,8 +92,7 @@ ui<-fluidPage(
                    plotOutput("vlfPlot", width = "1000px",height = "180px",inline = FALSE),
                    plotOutput("hfPlot", width = "1000px",height = "180px",inline = FALSE),
                    plotOutput("lfPlot", width = "1000px",height = "180px",inline = FALSE),
-                   plotOutput("hrPlot", width = "1000px", height = "180px", inline = F),
-                   plotOutput("testPlot",  width = "1000px", height = "180px", inline = F)
+                   plotOutput("hrPlot", width = "1000px", height = "180px", inline = F)
                  ),
                 fluidRow(id="significanceRow",
                   plotOutput("frameHistogram", width="1000px", height="700px", inline = FALSE)
