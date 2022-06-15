@@ -138,19 +138,24 @@ shinyServer(function(input, output, session){
             updateSelectInput(session, "significanceEpisodes", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[0])
             updateSelectInput(session, "significanceComparing", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[1])
           }
-          hrv.data = CreateFreqAnalysis(hrv.data, verbose = F)
+          hrv.data <- CreateFreqAnalysis(hrv.data)
           hrv.data = CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = 300, shift = 60, sizesp = 1024)
+          hrv.data <- CreateTimeAnalysis(hrv.data, size=300, numofbins=NULL, interval=7.8125, verbose=NULL )
+          print(hrv.data$TimeAnalysis[[1]])
+          x = 
           if(input$lfhf){#todo: checkear por que indexes no funcionan
               output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
-                                                                 epColorPalette = "red")})
+                                                                 epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "")})
               output$ulfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", epColorPalette = "red",
-                                                                 epLegendCoords = c(2000,7500))})
+                                                                 epLegendCoords = c(2000,7500), ylab = "ULF",xlab = "", main = "")})
               output$vlfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", epColorPalette = "red",
-                                                                epLegendCoords = c(2000,7500))})
+                                                                epLegendCoords = c(2000,7500), ylab = "VLF",xlab = "", main = "")})
               output$hfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "HF", epColorPalette = "red",
-                                                                epLegendCoords = c(2000,7500))})
+                                                                epLegendCoords = c(2000,7500), ylab = "HF",xlab = "", main = "")})
               output$lfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF", epColorPalette = "red",
-                                                               epLegendCoords = c(2000,7500))})
+                                                               epLegendCoords = c(2000,7500), ylab = "LF", main = "", xlab="")})
+              output$hrPlot <- renderPlot({PlotHR(hrv.data, Tags = "all", xlab = "time (sec.)", ylab = "Heart Rate", main = "", type = "l")})
+              output$testPlot <- renderPlot({plotNormalHistogram(mean(hrv.data$TimeAnalysis[[1]]$pNN50))})
           }
         }else{
           showNotification("Please, select a beat and interpolate it to use this menu.",type='warning')
