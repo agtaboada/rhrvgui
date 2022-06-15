@@ -21,6 +21,7 @@ shinyServer(function(input, output, session){
     shinyjs::disable("loadEpButton")
     shinyjs::disable("clearEpButton")
     shinyjs::disable("interpolateButton")
+    shinyjs::
     
     hideElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
     

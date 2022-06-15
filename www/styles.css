@@ -1,0 +1,36 @@
+body{
+	background-color: #E2F0F6;
+}
+
+nav{
+	padding-left: 2%;
+}
+
+button{
+	border: 2px solid #DAE0FA !important;
+	background-color: #BFCEE0 !important;
+}
+
+.navbar-header{
+	color: #BFCEE0;
+	padding-right: 2%;
+}
+
+.container-fluid{
+	padding: 0px;
+}
+
+.row{
+	padding: 1%;
+}
+
+.shiny-plot-output.shiny-bound-output{
+	border: 2px solid #C1DCDE;
+	border-collapse: none;
+}
+
+#mainSidebar{
+	border: 2px solid #C1DCDE;
+	padding: 40px;
+	background-color: white;
+}

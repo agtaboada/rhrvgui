@@ -8,7 +8,9 @@ library(stringr)
 
 ui<-fluidPage(
   shinyjs::useShinyjs(),
-  tags$link(rel = "stylesheet", type="text/css", href="css/style.css"),
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+  ),
   navbarPage("RHRV GUI", id="mainTabSelect",
     tabPanel("Main menu",
              sidebarPanel(id="mainSidebar",
@@ -17,9 +19,7 @@ ui<-fluidPage(
                             h3("Options")
                           ),
                           fluidRow(
-                            h4("Heart rate data")
-                          ),
-                          fluidRow(
+                            h4("Heart rate data"),
                             shinyFilesButton("loadHrButton",
                                              "Load data",
                                              "Select a file",
@@ -34,9 +34,7 @@ ui<-fluidPage(
                             actionButton("editHrButton", "Edit")
                           ),
                           fluidRow(
-                            h4("Episodes")
-                          ),
-                          fluidRow(
+                          h4("Episodes"),
                           shinyFilesButton("loadEpButton", "Load episodes",
                                            "Select a file",
                                            FALSE,
@@ -54,7 +52,6 @@ ui<-fluidPage(
              ),
              mainPanel(id="mainMainPanel",
                        "",
-                       fluidRow(
                          plotOutput("mainGraph",
                                     width = "100%",
                                     height = "800px",
@@ -63,7 +60,6 @@ ui<-fluidPage(
                                     hover = NULL,
                                     brush = NULL,
                                     inline = FALSE
-                         )
                        )
              )         
     ),
