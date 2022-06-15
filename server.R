@@ -54,6 +54,7 @@ shinyServer(function(input, output, session){
                   output$mainGraph<-renderPlot({
                     PlotNIHR(hrv.data)
                   })
+                  shinyjs::show("mainPoinPanel")
         },error = function(e){
           showNotification(loadingFileErrorStr, type = 'err')
         })
@@ -310,7 +311,7 @@ shinyServer(function(input, output, session){
       if(input$lf == FALSE){
         hideElement(id = "lfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
       }else{
-        showElement(id = "lfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+        showElement(id = "lfPlot", anim = TRUE, animType = "fade", time = 0.4, selector = NULL, asis = FALSE)
       }
     })
     
@@ -318,7 +319,7 @@ shinyServer(function(input, output, session){
       if(input$hf == FALSE){
         hideElement(id = "hfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
       }else{
-        showElement(id = "hfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+        showElement(id = "hfPlot", anim = TRUE, animType = "fade", time = 0.4, selector = NULL, asis = FALSE)
       }
     })
     
@@ -326,7 +327,7 @@ shinyServer(function(input, output, session){
       if(input$vlf == FALSE){
         hideElement(id = "vlfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
       }else{
-        showElement(id = "vlfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+        showElement(id = "vlfPlot", anim = TRUE, animType = "fade", time = 0.4, selector = NULL, asis = FALSE)
       }
     })
     
@@ -334,7 +335,7 @@ shinyServer(function(input, output, session){
       if(input$ulf == FALSE){
         hideElement(id = "ulfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
       }else{
-        showElement(id = "ulfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+        showElement(id = "ulfPlot", anim = TRUE, animType = "fade", time = 0.4, selector = NULL, asis = FALSE)
       }
     })
     
@@ -342,7 +343,7 @@ shinyServer(function(input, output, session){
       if(input$lfhf == FALSE){
         hideElement(id = "lfhfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
       }else{
-        showElement(id = "lfhfPlot", anim = TRUE, animType = "slide", time = 0.2, selector = NULL, asis = FALSE)
+        showElement(id = "lfhfPlot", anim = TRUE, animType = "fade", time = 0.4, selector = NULL, asis = FALSE)
       }
     })
     
