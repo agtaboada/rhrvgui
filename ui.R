@@ -68,7 +68,9 @@ ui<-fluidPage(
                useShinyjs(),
                sidebarPanel(id="frameSidebar",
                             fluidRow(
-                              h5("Visible Bands"),
+                              h3("Visible Bands")
+                              ),
+                            fluidRow(
                                 checkboxInput("lfhf", "LF/HF", TRUE),
                                 checkboxInput("ulf", "ULF", TRUE),
                                 checkboxInput("vlf", "VLF", TRUE),
@@ -111,9 +113,8 @@ ui<-fluidPage(
                  textOutput("sd1sec"),
                  textOutput("sd2sec")
                ),
-               mainPanel(
-                 tabsetPanel(
-                   tabPanel(
+               mainPanel(id="mainPoinPanel",
+                   fluidRow(id="mainPoinRow",
                      plotOutput("mainPoinPlot",
                                 width = "800px",
                                 height = "400px",
@@ -123,7 +124,7 @@ ui<-fluidPage(
                                 brush = NULL,
                                 inline = FALSE)
                     ),
-                   tabPanel(
+                   fluidRow(
                      plotOutput("secondaryPoinPlot",
                                 width = "800px",
                                 height = "400px",
@@ -133,12 +134,11 @@ ui<-fluidPage(
                                 brush = NULL,
                                 inline = FALSE)
                    )
-                  )
                )
     )),
     tabPanel(id="panelOptions", value="optionsTab", "Options",
              tabPanel("Frame-based evolution",
-                      mainPanel("",
+                      mainPanel(id="mainOptPanel",
                                 fluidRow(
                                   h4("Interpolate")
                                 ),

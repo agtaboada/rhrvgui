@@ -11,6 +11,10 @@ button{
 	background-color: #BFCEE0 !important;
 }
 
+input[type="checkbox"]{
+  	accent-color: #BFCEE0;
+}
+
 .navbar-header{
 	color: #BFCEE0;
 	padding-right: 2%;
@@ -24,13 +28,30 @@ button{
 	padding: 1%;
 }
 
-.shiny-plot-output.shiny-bound-output{
-	border: 2px solid #C1DCDE;
-	border-collapse: none;
-}
-
-#mainSidebar{
+#mainSidebar, #frameSidebar, #poincareSidebar, #mainOptPanel{
 	border: 2px solid #C1DCDE;
 	padding: 40px;
 	background-color: white;
+}
+
+#mainOptPanel{
+	margin-left: 15%;
+}
+
+#mainFrameRow{
+	margin-left: 5%;
+}
+
+#mainPoinRow{
+	padding-top: 0px !important;
+}
+
+ #mainPoinPanel{
+ 	padding-left: 7.5%;
+ }
+
+.shiny-notification {
+             position:fixed;
+             top: calc(7.5%);
+             left: calc(40%);
 }
