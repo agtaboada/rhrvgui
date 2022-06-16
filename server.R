@@ -166,12 +166,27 @@ shinyServer(function(input, output, session){
           if(episodesSelected == TRUE){
             episodesValue <- "all"
           }
-          print(episodesValue)
           hrv.data <- InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
           hrv.data <- CreateTimeAnalysis(hrv.data, size=300, numofbins=NULL, interval=7.8125, verbose=NULL )
+          print(hrv.data$TimeAnalysis)
+          timeAnalysis = hrv.data$TimeAnalysis[[1]]
           output$fileName <- renderText({ paste("Name: ", fileName)})
           output$signalLength <- renderText({ paste("Signal length: ", max(hrv.data$Beat[["Time"]]))})
           output$reportFilePlot <- renderPlot({PlotHR(hrv.data, Indexes=episodesValue, main=paste(fileName, " - Interpolated HR"))})
+          output$reportHistogramPlot <-renderPlot(hist(hrv.data$Beat[["niHR"]], main="HR histogram", xlab="HR"))
+          output$beatNumber <- renderText({paste("No. of beats: ", length(hrv.data$Beat[["Time"]]))})
+          output$meanHr <- renderText({paste("Mean HR: ", round(mean(hrv.data$Beat[["niHR"]]),4))})
+          output$stdHr <- renderText({paste("STD HR: ", round(sd(hrv.data$Beat[["niHR"]]),4))})
+          output$avnn <- renderText({paste("Mean RR (AVNN): ","")})
+          output$sdnn <- renderText({paste("STD RR (SDNN): ", round(timeAnalysis$SDNN, 4))})
+          output$sdann <- renderText({paste("SDANN: ", round(timeAnalysis$SDANN, 4))})
+          output$sdnnidx <- renderText({paste("SDNNIDX: ", round(timeAnalysis$SDNNIDX, 4))})
+          output$pnn50 <- renderText({paste("pNN50: ", round(timeAnalysis$pNN50, 4))})
+          output$rmssd <- renderText({paste("rMSSD: ", round(timeAnalysis$rMSSD, 4))})
+          output$irrr <- renderText({paste("IRRR: ", round(timeAnalysis$IRRR, 4))})
+          output$madrr <- renderText({paste("MADRR: ", round(timeAnalysis$MADRR, 4))})
+          output$tinn <- renderText({paste("TINN: ", round(timeAnalysis$TINN, 4))})
+          output$hrvIndex <- renderText({paste("HRV Index: ", round(timeAnalysis$HRVi, 4))})
         }else{
           showNotification("Please, load some beat data in order to use this menu.", type='warning')
         }

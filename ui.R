@@ -111,7 +111,32 @@ ui<-fluidPage(
                    textOutput("signalLength", inline=TRUE)
                  ),
                  fluidRow(
-                   plotOutput("reportFilePlot", width = "80%", height = "500px", click = NULL, dblclick = NULL, hover = NULL, brush = NULL, inline = FALSE)
+                   plotOutput("reportFilePlot", width = "80%", height = "400px", click = NULL, dblclick = NULL, hover = NULL, brush = NULL, inline = FALSE)
+                 ),
+                 fluidRow(
+                   fluidRow(
+                     h4("Global Analysis (time-domain parameters)")
+                   ),
+                   column(8, id="reportHistogram",
+                           plotOutput("reportHistogramPlot", width="100%", height="400px", inline=F)  
+                   ),
+                   column(2, id="reportGlobalData1",
+                          textOutput("beatNumber", inline=F),
+                          textOutput("meanHr", inline=F),
+                          textOutput("stdHr", inline=F),
+                          textOutput("avnn", inline=F),
+                          textOutput("sdnn", inline=F),
+                          textOutput("sdann", inline=F),
+                          textOutput("sdnnidx", inline=F)
+                   ),
+                   column(2, id="reportGlobalData2",
+                          textOutput("pnn50", inline=F),
+                          textOutput("rmssd", inline=F),
+                          textOutput("irrr", inline=F),
+                          textOutput("madrr", inline=F),
+                          textOutput("tinn", inline=F),
+                          textOutput("hrvIndex", inline=F)
+                   )
                  )
                )
              )
