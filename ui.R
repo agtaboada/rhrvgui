@@ -9,7 +9,9 @@ library(stringr)
 ui<-fluidPage(
   shinyjs::useShinyjs(),
   tags$head(
-    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css"),
+    tags$script(src = "download.js"),
+    tags$script(src = "html2pdf.js")
   ),
   navbarPage("RHRV GUI", id="mainTabSelect",
     tabPanel("Main menu",
@@ -102,9 +104,10 @@ ui<-fluidPage(
     ),
     tabPanel(id="panelReport", value="reportTab", "Report",
              fluidPage(
-               mainPanel(
+               mainPanel( id="panelReportMainPanel",
                  fluidRow(
-                   h4("File details")
+                   h4("File details"),
+                   actionButton(inputId="downloadButton", "Save", inline=T)
                  ),
                  fluidRow(
                    textOutput("fileName", inline=TRUE),
@@ -172,7 +175,8 @@ ui<-fluidPage(
                        textOutput("frameNumber", inline = F)
                      )
                    )
-                 )
+                 ),
+                 tags$div(id="editor")
                )
              )
     ),
