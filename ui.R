@@ -151,6 +151,27 @@ ui<-fluidPage(
                           textOutput("reportSd2", inline=F)
                      )
                    )
+                 ),
+                 fluidRow(
+                   fluidRow(
+                     h4("Frame-based analysis")
+                   ),
+                   fluidRow(
+                     column(8,
+                       plotOutput("lfhfPlotReport", width = "100%",height = "200px",inline = FALSE),
+                       plotOutput("ulfPlotReport", width = "100%",height = "200px",inline = FALSE),
+                       plotOutput("vlfPlotReport", width = "100%",height = "200px",inline = FALSE),
+                       plotOutput("hfPlotReport", width = "100%",height = "200px",inline = FALSE),
+                       plotOutput("lfPlotReport", width = "100%",height = "200px",inline = FALSE),
+                       plotOutput("hrPlotReport", width = "100%", height = "200px",inline = F)
+                     ),
+                     column(4,
+                       textOutput("interpolationValueRep", inline = F),
+                       textOutput("frameLength", inline = F),
+                       textOutput("frameShift", inline = F),
+                       textOutput("frameNumber", inline = F)
+                     )
+                   )
                  )
                )
              )
@@ -214,6 +235,13 @@ ui<-fluidPage(
                                 fluidRow(
                                   column(2, numericInput("poincareyMin", "Min. Y", -800, width="100px")),
                                   column(2, numericInput("poincareyMax", "Max. Y", 800,  width="100px"))
+                                ),
+                                fluidRow(
+                                  h4("Window options")
+                                ),
+                                fluidRow(
+                                  column(2, numericInput("windowSize", "Window size", 120, width="100px")),
+                                  column(2, numericInput("windowShift","Window shift", 10, width="100px"))
                                 )
                       )
              )

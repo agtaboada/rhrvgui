@@ -14,6 +14,8 @@ shinyServer(function(input, output, session){
     significanceAnalysis <<- FALSE
     hrv.episode <<- NULL
     fileName <<- NULL
+    windowSize <<- 120
+    windowShift <<- 10
     loadingFileErrorStr <<- "Error loading the file: make sure you are using the proper file extension and data format."
     
     shinyjs::disable("sigAnBt")
@@ -141,8 +143,8 @@ shinyServer(function(input, output, session){
             updateSelectInput(session, "significanceComparing", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[1])
           }
           hrv.data <- CreateFreqAnalysis(hrv.data)
-          hrv.data = CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = 300, shift = 60, sizesp = 1024)
-          hrv.data <- CreateTimeAnalysis(hrv.data, size=300, numofbins=NULL, interval=7.8125, verbose=NULL )
+          hrv.data <- CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = windowSize, shift = windowShift, sizesp = 1024)
+          hrv.data <- CreateTimeAnalysis(hrv.data, size=windowSize, numofbins=NULL, interval=7.8125, verbose=NULL )
           if(input$lfhf){#todo: checkear por que indexes no funcionan
               output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
                                                                  epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "")})
@@ -166,22 +168,27 @@ shinyServer(function(input, output, session){
           if(episodesSelected == TRUE){
             episodesValue <- "all"
           }
+          
           hrv.data <- InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
-          hrv.data <- CreateTimeAnalysis(hrv.data, size=300, numofbins=NULL, interval=7.8125, verbose=NULL )
+          hrv.data <- CreateTimeAnalysis(hrv.data, size=windowSize, numofbins=NULL, interval=7.8125, verbose=NULL )
           hrv.data <- CreateNonLinearAnalysis(hrv.data)
-          poincareData = PoincarePlot(hrv.data, doPlot = F, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
-                                      xlim=timeLineX, ylim=timeLineY, verbose=NULL)
-          hrv.data <- CalculateCorrDim(hrv.data,indexNonLinearAnalysis=1,
-                                      minEmbeddingDim=2, maxEmbeddingDim=8,timeLag=1,minRadius=1,
-                                      maxRadius=15, pointsRadius=20,theilerWindow=10,
-                                      corrOrder=2,doPlot=FALSE)
+          hrv.data <- CreateFreqAnalysis(hrv.data)
+          poincareData = PoincarePlot(hrv.data, doPlot = F, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, xlim=timeLineX, ylim=timeLineY,
+                                      verbose=NULL)
+          hrv.data <- CalculateCorrDim(hrv.data,indexNonLinearAnalysis=1, minEmbeddingDim=2, maxEmbeddingDim=8,timeLag=1,minRadius=1, maxRadius=15, pointsRadius=20,
+                                       theilerWindow=10, corrOrder=2,doPlot=FALSE)
           hrv.data <- CalculateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,doPlot=FALSE)
           hrv.data <- EstimateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,regressionRange=c(6,10))
-          print(hrv.data$NonLinearAnalysis[[1]]$sampleEntropy)
+          hrv.data <- CalculatePowerBand(hrv.data, indexFreqAnalysis = 1, size = 30, shift = 60, sizesp = 1024)
+          
           timeAnalysis = hrv.data$TimeAnalysis[[1]]
+          frameNumber = tail(hrv.data$Beat[["Time"]], n=1) / windowShift
+          print(frameNumber)
+          
           output$fileName <- renderText({ paste("Name: ", fileName)})
           output$signalLength <- renderText({ paste("Signal length: ", max(hrv.data$Beat[["Time"]]))})
           output$reportFilePlot <- renderPlot({PlotHR(hrv.data, Indexes=episodesValue, main=paste(fileName, " - Interpolated HR"))})
+          
           output$reportHistogramPlot <-renderPlot(hist(hrv.data$Beat[["niHR"]], main="HR histogram", xlab="HR"))
           output$beatNumber <- renderText({paste("No. of beats: ", length(hrv.data$Beat[["Time"]]))})
           output$meanHr <- renderText({paste("Mean HR: ", round(mean(hrv.data$Beat[["niHR"]]),4))})
@@ -196,10 +203,29 @@ shinyServer(function(input, output, session){
           output$madrr <- renderText({paste("MADRR: ", round(timeAnalysis$MADRR, 4))})
           output$tinn <- renderText({paste("TINN: ", round(timeAnalysis$TINN, 4))})
           output$hrvIndex <- renderText({paste("HRV Index: ", round(timeAnalysis$HRVi, 4))})
+          
           output$reportPoincarePlot <- renderPlot(PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
                                                                xlim=timeLineX, ylim=timeLineY, verbose=NULL))
           output$reportSd1 <- renderText(paste("SD1: ", round(poincareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1, 4)))
           output$reportSd2 <- renderText(paste("SD2: ", round(poincareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2, 4)))
+          
+          output$lfhfPlotReport <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
+                                                             epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "")})
+          output$ulfPlotReport <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", epColorPalette = "red",
+                                                            epLegendCoords = c(2000,7500), ylab = "ULF",xlab = "", main = "")})
+          output$vlfPlotReport <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", epColorPalette = "red",
+                                                            epLegendCoords = c(2000,7500), ylab = "VLF",xlab = "", main = "")})
+          output$hfPlotReport <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "HF", epColorPalette = "red",
+                                                           epLegendCoords = c(2000,7500), ylab = "HF",xlab = "", main = "")})
+          output$lfPlotReport <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF", epColorPalette = "red",
+                                                           epLegendCoords = c(2000,7500), ylab = "LF", main = "", xlab="")})
+          output$hrPlotReport <- renderPlot({PlotHR(hrv.data, Tags = "all", xlab = "time (sec.)", ylab = "Heart Rate", main = "", type = "l")})
+          output$interpolationValueRep <- renderText(paste("Interpolation value: ", interpolationValue))
+          output$frameLength <- renderText(paste("Frame length: ", windowSize))
+          output$frameShift <- renderText(paste("Frame shift: ", windowShift))
+          output$frameNumber <- renderText(paste("Number of frames: ", round(frameNumber, 0)))
+          
+
         }else{
           showNotification("Please, load some beat data in order to use this menu.", type='warning')
         }
@@ -416,6 +442,14 @@ shinyServer(function(input, output, session){
         showElement(id="mainFrameRow", anim = TRUE, animType="fade", time=0.4, selector=NULL, asis = FALSE)
         updateActionButton(session, "sigAnBt",label = "Significance Analysis")
       }
+    })
+    
+    observeEvent(input$windowSize, {
+      windowSize <<- input$windowSize
+    })
+    
+    observeEvent(input$windowShift, {
+      windowShift <<- input$windowShift
     })
     
     repaintPoincareCompare <- function(){
