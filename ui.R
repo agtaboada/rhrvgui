@@ -137,6 +137,20 @@ ui<-fluidPage(
                           textOutput("tinn", inline=F),
                           textOutput("hrvIndex", inline=F)
                    )
+                 ),
+                 fluidRow(
+                   fluidRow(
+                     h4("Non-linear analysis")
+                   ),
+                   fluidRow(
+                     column(8, id="reportPoincare",
+                          plotOutput("reportPoincarePlot", width="100%", height="400px", inline=F)
+                     ),
+                     column(2,
+                          textOutput("reportSd1", inline=F),
+                          textOutput("reportSd2", inline=F)
+                     )
+                   )
                  )
                )
              )

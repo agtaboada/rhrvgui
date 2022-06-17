@@ -168,7 +168,16 @@ shinyServer(function(input, output, session){
           }
           hrv.data <- InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
           hrv.data <- CreateTimeAnalysis(hrv.data, size=300, numofbins=NULL, interval=7.8125, verbose=NULL )
-          print(hrv.data$TimeAnalysis)
+          hrv.data <- CreateNonLinearAnalysis(hrv.data)
+          poincareData = PoincarePlot(hrv.data, doPlot = F, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
+                                      xlim=timeLineX, ylim=timeLineY, verbose=NULL)
+          hrv.data <- CalculateCorrDim(hrv.data,indexNonLinearAnalysis=1,
+                                      minEmbeddingDim=2, maxEmbeddingDim=8,timeLag=1,minRadius=1,
+                                      maxRadius=15, pointsRadius=20,theilerWindow=10,
+                                      corrOrder=2,doPlot=FALSE)
+          hrv.data <- CalculateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,doPlot=FALSE)
+          hrv.data <- EstimateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,regressionRange=c(6,10))
+          print(hrv.data$NonLinearAnalysis[[1]]$sampleEntropy)
           timeAnalysis = hrv.data$TimeAnalysis[[1]]
           output$fileName <- renderText({ paste("Name: ", fileName)})
           output$signalLength <- renderText({ paste("Signal length: ", max(hrv.data$Beat[["Time"]]))})
@@ -187,6 +196,10 @@ shinyServer(function(input, output, session){
           output$madrr <- renderText({paste("MADRR: ", round(timeAnalysis$MADRR, 4))})
           output$tinn <- renderText({paste("TINN: ", round(timeAnalysis$TINN, 4))})
           output$hrvIndex <- renderText({paste("HRV Index: ", round(timeAnalysis$HRVi, 4))})
+          output$reportPoincarePlot <- renderPlot(PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
+                                                               xlim=timeLineX, ylim=timeLineY, verbose=NULL))
+          output$reportSd1 <- renderText(paste("SD1: ", round(poincareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1, 4)))
+          output$reportSd2 <- renderText(paste("SD2: ", round(poincareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2, 4)))
         }else{
           showNotification("Please, load some beat data in order to use this menu.", type='warning')
         }
