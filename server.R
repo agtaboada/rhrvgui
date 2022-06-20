@@ -32,6 +32,7 @@ shinyServer(function(input, output, session){
     
     shinyFileChoose(input, "loadHrButton", roots = volumes, session = session)
     shinyFileChoose(input, "loadEpButton", roots = volumes, session = session)
+    shinyFileChoose(input, "loadMultipleData", roots = volumes, session = session)
     
     hrv.data = reactiveVal()
     hrv.data = CreateHRVData()

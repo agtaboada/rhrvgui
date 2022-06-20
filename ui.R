@@ -219,6 +219,20 @@ ui<-fluidPage(
                    )
                )
     )),
+    tabPanel(id="panelBatch", value="batchTab", "Batch Mode",
+             sidebarPanel(id="batchSidebar",
+               fluidRow(
+                 h4("Batch Mode"),
+                 shinyFilesButton("loadMultipleData", "Load data", "Select a file",multiple=T, buttonType = "default", viewtype = "detail")
+               ),
+               fluidRow(
+                 h4("Selected Files")
+               )
+             ),
+             mainPanel(id="mainBatchPanel",
+                 tableOutput('table')
+             )
+    ),
     tabPanel(id="panelOptions", value="optionsTab", "Options",
              tabPanel("Frame-based evolution",
                       mainPanel(id="mainOptPanel",
