@@ -11,7 +11,8 @@ ui<-fluidPage(
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "styles.css"),
     tags$script(src = "download.js"),
-    tags$script(src = "html2pdf.js")
+    tags$script(src = "html2pdf.js"),
+    tags$script(src = "html2canvas.min.js")
   ),
   navbarPage("RHRV GUI", id="mainTabSelect",
     tabPanel("Main menu",
@@ -105,78 +106,79 @@ ui<-fluidPage(
     tabPanel(id="panelReport", value="reportTab", "Report",
              fluidPage(
                mainPanel( id="panelReportMainPanel",
-                 fluidRow(
-                   h4("File details"),
-                   actionButton(inputId="downloadButton", "Save", inline=T)
-                 ),
-                 fluidRow(
-                   textOutput("fileName", inline=TRUE),
-                   textOutput("signalLength", inline=TRUE)
-                 ),
-                 fluidRow(
-                   plotOutput("reportFilePlot", width = "80%", height = "400px", click = NULL, dblclick = NULL, hover = NULL, brush = NULL, inline = FALSE)
-                 ),
-                 fluidRow(
-                   fluidRow(
-                     h4("Global Analysis (time-domain parameters)")
+                 tags$div(id="printDiv",
+                   fluidRow(id="fileReportRow",
+                     h4("File details"),
+                     actionButton(inputId="downloadButton", "Save", width="7.5%", inline=T)
                    ),
-                   column(8, id="reportHistogram",
-                           plotOutput("reportHistogramPlot", width="100%", height="400px", inline=F)  
-                   ),
-                   column(2, id="reportGlobalData1",
-                          textOutput("beatNumber", inline=F),
-                          textOutput("meanHr", inline=F),
-                          textOutput("stdHr", inline=F),
-                          textOutput("avnn", inline=F),
-                          textOutput("sdnn", inline=F),
-                          textOutput("sdann", inline=F),
-                          textOutput("sdnnidx", inline=F)
-                   ),
-                   column(2, id="reportGlobalData2",
-                          textOutput("pnn50", inline=F),
-                          textOutput("rmssd", inline=F),
-                          textOutput("irrr", inline=F),
-                          textOutput("madrr", inline=F),
-                          textOutput("tinn", inline=F),
-                          textOutput("hrvIndex", inline=F)
-                   )
-                 ),
-                 fluidRow(
-                   fluidRow(
-                     h4("Non-linear analysis")
+                   fluidRow(id="fileDetailsHeader",
+                     textOutput("fileName", inline=TRUE),
+                     textOutput("signalLength", inline=TRUE)
                    ),
                    fluidRow(
-                     column(8, id="reportPoincare",
-                          plotOutput("reportPoincarePlot", width="100%", height="400px", inline=F)
+                     plotOutput("reportFilePlot", width = "100%", height = "400px", click = NULL, dblclick = NULL, hover = NULL, brush = NULL, inline = FALSE)
+                   ),
+                   fluidRow(
+                     fluidRow(id="globalReportRow",
+                       h4("Global Analysis (time-domain parameters)")
                      ),
-                     column(2,
-                          textOutput("reportSd1", inline=F),
-                          textOutput("reportSd2", inline=F)
+                     column(8, id="reportHistogram",
+                             plotOutput("reportHistogramPlot", width="100%", height="400px", inline=F)
+                     ),
+                     column(2, id="reportGlobalData1",
+                            textOutput("beatNumber", inline=F),
+                            textOutput("meanHr", inline=F),
+                            textOutput("stdHr", inline=F),
+                            textOutput("avnn", inline=F),
+                            textOutput("sdnn", inline=F),
+                            textOutput("sdann", inline=F),
+                            textOutput("sdnnidx", inline=F)
+                     ),
+                     column(2, id="reportGlobalData2",
+                            textOutput("pnn50", inline=F),
+                            textOutput("rmssd", inline=F),
+                            textOutput("irrr", inline=F),
+                            textOutput("madrr", inline=F),
+                            textOutput("tinn", inline=F),
+                            textOutput("hrvIndex", inline=F)
+                     )
+                   ),
+                   fluidRow(
+                     fluidRow(id="nonLinearReportRow",
+                       h4("Non-linear analysis")
+                     ),
+                     fluidRow(
+                       column(8, id="reportPoincare",
+                            plotOutput("reportPoincarePlot", width="100%", height="400px", inline=F)
+                       ),
+                       column(2, id="reportPoinData",
+                            textOutput("reportSd1", inline=F),
+                            textOutput("reportSd2", inline=F)
+                       )
+                     )
+                   ),
+                   fluidRow(
+                     fluidRow(id="frameReportRow",
+                       h4("Frame-based analysis")
+                     ),
+                     fluidRow( id="reportFramePlot",
+                       column(8,
+                         plotOutput("lfhfPlotReport", width = "105%",height = "200px",inline = FALSE),
+                         plotOutput("ulfPlotReport", width = "105%",height = "200px",inline = FALSE),
+                         plotOutput("vlfPlotReport", width = "105%",height = "200px",inline = FALSE),
+                         plotOutput("hfPlotReport", width = "105%",height = "200px",inline = FALSE),
+                         plotOutput("lfPlotReport", width = "105%",height = "200px",inline = FALSE),
+                         plotOutput("hrPlotReport", width = "105%", height = "200px",inline = F)
+                       ),
+                       column(4, id="frameReportData",
+                         textOutput("interpolationValueRep", inline = F),
+                         textOutput("frameLength", inline = F),
+                         textOutput("frameShift", inline = F),
+                         textOutput("frameNumber", inline = F)
+                       )
                      )
                    )
-                 ),
-                 fluidRow(
-                   fluidRow(
-                     h4("Frame-based analysis")
-                   ),
-                   fluidRow(
-                     column(8,
-                       plotOutput("lfhfPlotReport", width = "100%",height = "200px",inline = FALSE),
-                       plotOutput("ulfPlotReport", width = "100%",height = "200px",inline = FALSE),
-                       plotOutput("vlfPlotReport", width = "100%",height = "200px",inline = FALSE),
-                       plotOutput("hfPlotReport", width = "100%",height = "200px",inline = FALSE),
-                       plotOutput("lfPlotReport", width = "100%",height = "200px",inline = FALSE),
-                       plotOutput("hrPlotReport", width = "100%", height = "200px",inline = F)
-                     ),
-                     column(4,
-                       textOutput("interpolationValueRep", inline = F),
-                       textOutput("frameLength", inline = F),
-                       textOutput("frameShift", inline = F),
-                       textOutput("frameNumber", inline = F)
-                     )
-                   )
-                 ),
-                 tags$div(id="editor")
+                 )
                )
              )
     ),

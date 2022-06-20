@@ -1,15 +1,21 @@
 window.onload = function(){
 	$('#downloadButton').click(function (){
-		var element = document.getElementById('panelReportMainPanel');
 
-		var opt = {
-		  margin:       1,
-		  filename:     'myfile.pdf',
-		  image:        { type: 'jpeg', quality: 0.98 },
-		  html2canvas:  { scale: 8},
-		  jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
-		};
-		html2pdf(element, opt);
-	});
+   	const captureElement = document.querySelector('#printDiv')
+    html2canvas(captureElement)
+        .then(canvas => {
+            canvas.style.display = 'none'
+            document.body.appendChild(canvas)
+            return canvas
+        })
+        .then(canvas => {
+            const image = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream')
+            const a = document.createElement('a')
+            a.setAttribute('download', 'my-image.png')
+            a.setAttribute('href', image)
+            a.click()
+            canvas.remove()
+        })
 
-};
+});
+}
