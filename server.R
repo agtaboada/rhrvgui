@@ -17,6 +17,10 @@ shinyServer(function(input, output, session){
     windowSize <<- 120
     windowShift <<- 10
     loadingFileErrorStr <<- "Error loading the file: make sure you are using the proper file extension and data format."
+    batchFileList <<- list()
+    batchRouteList <<- list()
+    batchHrvObjects <<- list()
+    batchFileNum <<- 1
     
     shinyjs::disable("sigAnBt")
     shinyjs::disable("filterHrButton")
@@ -37,6 +41,25 @@ shinyServer(function(input, output, session){
     hrv.data = reactiveVal()
     hrv.data = CreateHRVData()
     hrv.data = SetVerbose(hrv.data, TRUE)
+    
+    reloadBatchDatatable <- function(){
+      shinyInput <- function(FUN, len, id, ...) {
+        inputs <- character(len)
+        for (i in seq_len(len)) {
+          inputs[i] <- as.character(FUN(paste0(id, i), ...))
+        }
+        inputs
+      }
+      
+      df <- data.frame(
+        name = unlist(batchFileList),
+        route = unlist(batchRouteList),
+        Actions = shinyInput(actionButton, batchFileNum-1, 'button_', label = "Delete", onclick = 'Shiny.onInputChange(\"deleteButton\",  this.id)' ),
+        stringsAsFactors = FALSE
+      )
+      
+      output$batchTable <- renderDataTable(df, options=list(searching=FALSE,dom=""), escape = F)
+    }
     
     observeEvent(input$loadHrButton, {
       file <- reactive(input$loadHrButton)
@@ -456,6 +479,47 @@ shinyServer(function(input, output, session){
     
     observeEvent(input$downloadButton, {
       shinyjs::reset("panelReportMainPanel")
+    })
+    
+    observeEvent(input$loadMultipleData, {
+      file <- reactive(input$loadMultipleData)
+      if(length(file()) > 0 & is.numeric(file())){
+        return(NULL)
+      }else{
+        datapath <- parseFilePaths(volumes, file())$datapath
+        for(d in datapath){
+          tryCatch({
+            currentDatapath <- gsub("/",.Platform$file.sep, d)
+            currentDatapath <- gsub(basename(d), "", d)
+            fileName <- basename(d)
+            
+            hrv.batchData <- CreateHRVData()
+            hrv.batchData <- SetVerbose(hrv.data, TRUE)
+            hrv.batchData <- LoadBeatAscii(hrv.batchData, fileName, currentDatapath)
+            
+            batchHrvObjects[batchFileNum] <<- hrv.batchData
+            batchFileList[batchFileNum] <<- fileName
+            batchRouteList[batchFileNum] <<- currentDatapath
+            batchFileNum <<- batchFileNum + 1
+            
+            hrv.batchData <- NULL
+          },error = function(e){
+              showNotification("There was an error while loading at least one of the files. You can check the files actually loaded on the sidebar menu.", 
+                               type = 'err')
+          })
+        }
+      }
+      reloadBatchDatatable()
+    })
+    
+    observeEvent(input$deleteButton, {
+      selectedRow <- as.numeric(strsplit(input$deleteButton, "_")[[1]][2])
+      batchFileNum <<- batchFileNum - 1
+      batchFileList[[selectedRow]] <<- NULL
+      batchRouteList[[selectedRow]] <<- NULL
+      batchHrvObjects[[selectedRow]] <<- NULL
+      
+      reloadBatchDatatable()
     })
     
     repaintPoincareCompare <- function(){

@@ -5,6 +5,7 @@ library(shinyjs)
 library(spsComps)
 library(tkrplot)
 library(stringr)
+library(DT)
 
 ui<-fluidPage(
   shinyjs::useShinyjs(),
@@ -222,11 +223,13 @@ ui<-fluidPage(
     tabPanel(id="panelBatch", value="batchTab", "Batch Mode",
              sidebarPanel(id="batchSidebar",
                fluidRow(
-                 h4("Batch Mode"),
                  shinyFilesButton("loadMultipleData", "Load data", "Select a file",multiple=T, buttonType = "default", viewtype = "detail")
                ),
                fluidRow(
-                 h4("Selected Files")
+                   DT::dataTableOutput("batchTable")
+               ),
+               fluidRow(
+                 
                )
              ),
              mainPanel(id="mainBatchPanel",
