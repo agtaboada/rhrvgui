@@ -20,6 +20,7 @@ shinyServer(function(input, output, session){
     batchFileList <<- list()
     batchRouteList <<- list()
     batchHrvObjects <<- list()
+    batchEpisodeList <<- list()
     batchFileNum <<- 1
     
     shinyjs::disable("sigAnBt")
@@ -37,24 +38,28 @@ shinyServer(function(input, output, session){
     shinyFileChoose(input, "loadHrButton", roots = volumes, session = session)
     shinyFileChoose(input, "loadEpButton", roots = volumes, session = session)
     shinyFileChoose(input, "loadMultipleData", roots = volumes, session = session)
+    shinyFileChoose(input, "batchEpisodesBt", roots = volumes, session = session)
     
     hrv.data = reactiveVal()
     hrv.data = CreateHRVData()
     hrv.data = SetVerbose(hrv.data, TRUE)
     
-    reloadBatchDatatable <- function(){
-      shinyInput <- function(FUN, len, id, ...) {
-        inputs <- character(len)
-        for (i in seq_len(len)) {
-          inputs[i] <- as.character(FUN(paste0(id, i), ...))
-        }
-        inputs
+    shinyInput <- function(FUN, len, id, ...) {
+      inputs <- character(len)
+      for (i in seq_len(len)) {
+        inputs[i] <- as.character(FUN(paste0(id, i), ...))
       }
+      inputs
+    }
+    
+    reloadBatchDatatable <- function(){
       
       df <- data.frame(
-        name = unlist(batchFileList),
-        route = unlist(batchRouteList),
-        Actions = shinyInput(actionButton, batchFileNum-1, 'button_', label = "Delete", onclick = 'Shiny.onInputChange(\"deleteButton\",  this.id)' ),
+        Name = unlist(batchFileList),
+        Route = unlist(batchRouteList),
+        Episodes = unlist(batchEpisodeList),
+        Delete = paste(shinyInput(actionButton, batchFileNum-1, 'button_', label = "Beat", onclick = 'Shiny.onInputChange(\"deleteButton\",  this.id)' ),
+                        shinyInput(actionButton, batchFileNum-1, 'epButton_', label = "Episodes", onclick = 'Shiny.onInputChange(\"deleteEpButton\",  this.id)' )),
         stringsAsFactors = FALSE
       )
       
@@ -497,9 +502,10 @@ shinyServer(function(input, output, session){
             hrv.batchData <- SetVerbose(hrv.data, TRUE)
             hrv.batchData <- LoadBeatAscii(hrv.batchData, fileName, currentDatapath)
             
-            batchHrvObjects[batchFileNum] <<- hrv.batchData
+            batchHrvObjects[batchFileNum] <<- list(hrv.batchData)
             batchFileList[batchFileNum] <<- fileName
             batchRouteList[batchFileNum] <<- currentDatapath
+            batchEpisodeList[batchFileNum] <<- ""
             batchFileNum <<- batchFileNum + 1
             
             hrv.batchData <- NULL
@@ -510,16 +516,54 @@ shinyServer(function(input, output, session){
         }
       }
       reloadBatchDatatable()
+      updateSelectInput(session, "batchEpisodes", choices=unlist(batchFileList))
     })
     
-    observeEvent(input$deleteButton, {
+    observeEvent(input$deleteButton,{
       selectedRow <- as.numeric(strsplit(input$deleteButton, "_")[[1]][2])
+      print(selectedRow)
       batchFileNum <<- batchFileNum - 1
       batchFileList[[selectedRow]] <<- NULL
       batchRouteList[[selectedRow]] <<- NULL
       batchHrvObjects[[selectedRow]] <<- NULL
+      batchEpisodeList[[selectedRow]] <<- NULL
       
       reloadBatchDatatable()
+    })
+    
+    observeEvent(input$deleteEpButton, {
+      selectedRow <- as.numeric(strsplit(input$deleteEpButton, "_")[[1]][2])
+      print(batchHrvObjects[[selectedRow]])
+      batchEpisodeList[[selectedRow]] <<- ""
+      hrv.batchEp.data <- batchHrvObjects[[selectedRow]]
+      hrv.batchEp.data$Episodes <- NULL
+      batchHrvObjects[[selectedRow]] <<- hrv.batchEp.data
+      
+      reloadBatchDatatable()
+    })
+    
+    observeEvent(input$batchEpisodesBt, {
+      file <- reactive(input$batchEpisodesBt)
+      if(length(file()) > 0 & is.numeric(file())){
+        return(NULL)
+      }else{
+        index <- which(batchFileList == input$batchEpisodes)
+        datapath <- parseFilePaths(volumes, file())$datapath
+        fileName <- basename(datapath)
+        datapath <- gsub("/",.Platform$file.sep, datapath)
+        datapath <- gsub(basename(datapath), "", datapath)
+        print(index)
+        tryCatch({
+          hrv.batch.data <- batchHrvObjects[[index]]
+          hrv.batch.data <- LoadEpisodesAscii(hrv.batch.data, fileName, datapath)
+          batchEpisodeList[[index]] <<- paste(datapath,fileName)
+          batchHrvObjects[[index]] <<- hrv.batch.data
+          reloadBatchDatatable()
+        },error = function(e){
+          showNotification(loadingFileErrorStr, type = 'err')
+      })
+      
+    }
     })
     
     repaintPoincareCompare <- function(){

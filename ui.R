@@ -12,7 +12,6 @@ ui<-fluidPage(
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "styles.css"),
     tags$script(src = "download.js"),
-    tags$script(src = "html2pdf.js"),
     tags$script(src = "html2canvas.min.js")
   ),
   navbarPage("RHRV GUI", id="mainTabSelect",
@@ -223,7 +222,11 @@ ui<-fluidPage(
     tabPanel(id="panelBatch", value="batchTab", "Batch Mode",
              sidebarPanel(id="batchSidebar",
                fluidRow(
-                 shinyFilesButton("loadMultipleData", "Load data", "Select a file",multiple=T, buttonType = "default", viewtype = "detail")
+                 tags$div(id = "batchActionsWrapper", 
+                   shinyFilesButton("loadMultipleData", "Load data", "Select a file",multiple=T, buttonType = "default", viewtype = "detail"),
+                   selectInput("batchEpisodes","",choices="",multiple=FALSE, width="150px"),
+                   shinyFilesButton("batchEpisodesBt", "Add episode", "", multiple=F)
+                 )
                ),
                fluidRow(
                    DT::dataTableOutput("batchTable")
