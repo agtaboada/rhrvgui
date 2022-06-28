@@ -44,26 +44,71 @@ shinyServer(function(input, output, session){
     hrv.data = CreateHRVData()
     hrv.data = SetVerbose(hrv.data, TRUE)
     
-    shinyInput <- function(FUN, len, id, ...) {
-      inputs <- character(len)
-      for (i in seq_len(len)) {
-        inputs[i] <- as.character(FUN(paste0(id, i), ...))
+    deleteBeat <- function(selectedRow){
+      print(selectedRow)
+      batchFileNum <<- batchFileNum - 1
+      batchFileList[[selectedRow]] <<- NULL
+      batchRouteList[[selectedRow]] <<- NULL
+      batchHrvObjects[[selectedRow]] <<- NULL
+      batchEpisodeList[[selectedRow]] <<- NULL
+      reloadBatchDatatable()
+      if(batchFileNum > 1){
+        updateSelectInput(session, "batchEpisodes", choices=unlist(batchFileList))
+      }else{
+        updateSelectInput(session, "batchEpisodes", choices = c(""))
       }
-      inputs
+    }
+    
+    deleteEp <- function(selectedEp){
+      batchEpisodeList[[selectedEp]] <<- ""
+      hrv.batchEp.data <- batchHrvObjects[[selectedEp]]
+      hrv.batchEp.data$Episodes <- NULL
+      batchHrvObjects[[selectedEp]] <<- hrv.batchEp.data
+      
+      reloadBatchDatatable()
+    }
+    
+    shinyInput <- function(FUN, len, id, ...) {
+      if(len > 0){
+        inputs <- character(len)
+        for (i in seq_len(len)) {
+          inputs[i] <- as.character(FUN(paste0(id, i), ...))
+        }
+        inputs
+      }else{
+        NULL
+      }
     }
     
     reloadBatchDatatable <- function(){
-      
+      print("Entering reload func")
+      print(unlist(batchFileList))
+      print(unlist(batchRouteList))
+      print(unlist(batchEpisodeList))
+      print(batchFileNum -1)
       df <- data.frame(
         Name = unlist(batchFileList),
         Route = unlist(batchRouteList),
         Episodes = unlist(batchEpisodeList),
-        Delete = paste(shinyInput(actionButton, batchFileNum-1, 'button_', label = "Beat", onclick = 'Shiny.onInputChange(\"deleteButton\",  this.id)' ),
-                        shinyInput(actionButton, batchFileNum-1, 'epButton_', label = "Episodes", onclick = 'Shiny.onInputChange(\"deleteEpButton\",  this.id)' )),
+        Delete = paste(shinyInput(actionButton, batchFileNum-1, 'button_', label = "Beat"),
+                          shinyInput(actionButton, batchFileNum-1, 'epButton_', label = "Episodes")),
         stringsAsFactors = FALSE
       )
-      
+      print("data frame created successfully")
+      ##por algun motivo el siguiente bloque de codigo no puede generarse con un bucle...#
+      onclick(paste0("button_",1), deleteBeat(1))
+      onclick(paste0("button_",2), deleteBeat(2))
+      onclick(paste0("button_",3), deleteBeat(3))
+      onclick(paste0("button_",4), deleteBeat(4))
+      onclick(paste0("button_",5), deleteBeat(5))
+      onclick(paste0("epButton_",1), deleteEp(1))
+      onclick(paste0("epButton_",2), deleteEp(2))
+      onclick(paste0("epButton_",3), deleteEp(3))
+      onclick(paste0("epButton_",4), deleteEp(4))
+      onclick(paste0("epButton_",5), deleteEp(5))
+      print("onclicks loaded successfully")
       output$batchTable <- renderDataTable(df, options=list(searching=FALSE,dom=""), escape = F)
+      print("exiting reload func")
     }
     
     observeEvent(input$loadHrButton, {
@@ -517,29 +562,6 @@ shinyServer(function(input, output, session){
       }
       reloadBatchDatatable()
       updateSelectInput(session, "batchEpisodes", choices=unlist(batchFileList))
-    })
-    
-    observeEvent(input$deleteButton,{
-      selectedRow <- as.numeric(strsplit(input$deleteButton, "_")[[1]][2])
-      print(selectedRow)
-      batchFileNum <<- batchFileNum - 1
-      batchFileList[[selectedRow]] <<- NULL
-      batchRouteList[[selectedRow]] <<- NULL
-      batchHrvObjects[[selectedRow]] <<- NULL
-      batchEpisodeList[[selectedRow]] <<- NULL
-      
-      reloadBatchDatatable()
-    })
-    
-    observeEvent(input$deleteEpButton, {
-      selectedRow <- as.numeric(strsplit(input$deleteEpButton, "_")[[1]][2])
-      print(batchHrvObjects[[selectedRow]])
-      batchEpisodeList[[selectedRow]] <<- ""
-      hrv.batchEp.data <- batchHrvObjects[[selectedRow]]
-      hrv.batchEp.data$Episodes <- NULL
-      batchHrvObjects[[selectedRow]] <<- hrv.batchEp.data
-      
-      reloadBatchDatatable()
     })
     
     observeEvent(input$batchEpisodesBt, {
