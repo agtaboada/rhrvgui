@@ -254,11 +254,10 @@ shinyServer(function(input, output, session){
                                          theilerWindow=10, corrOrder=2,doPlot=FALSE)
             hrv.data <- CalculateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,doPlot=FALSE)
             hrv.data <- EstimateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,regressionRange=c(6,10))
-            hrv.data <- CalculatePowerBand(hrv.data, indexFreqAnalysis = 1, size = 30, shift = 60, sizesp = 1024)
+            hrv.data <- CalculatePowerBand(hrv.data, indexFreqAnalysis = 1, size = windowSize, shift = windowShift, sizesp = 1024)
             
             timeAnalysis = hrv.data$TimeAnalysis[[1]]
             frameNumber = tail(hrv.data$Beat[["Time"]], n=1) / windowShift
-            print(frameNumber)
             
             output$fileName <- renderText({ paste("Name: ", fileName)})
             output$signalLength <- renderText({ paste("Signal length: ", max(hrv.data$Beat[["Time"]]))})
@@ -532,37 +531,41 @@ shinyServer(function(input, output, session){
     })
     
     observeEvent(input$loadMultipleData, {
-      file <- reactive(input$loadMultipleData)
-      if(length(file()) > 0 & is.numeric(file())){
-        return(NULL)
-      }else{
-        datapath <- parseFilePaths(volumes, file())$datapath
-        for(d in datapath){
-          tryCatch({
-            currentDatapath <- gsub("/",.Platform$file.sep, d)
-            currentDatapath <- gsub(basename(d), "", d)
-            fileName <- basename(d)
-            
-            hrv.batchData <- CreateHRVData()
-            hrv.batchData <- SetVerbose(hrv.data, TRUE)
-            hrv.batchData <- LoadBeatAscii(hrv.batchData, fileName, currentDatapath)
-            
-            batchHrvObjects[batchFileNum] <<- list(hrv.batchData)
-            batchFileList[batchFileNum] <<- fileName
-            batchRouteList[batchFileNum] <<- currentDatapath
-            batchEpisodeList[batchFileNum] <<- ""
-            batchFileNum <<- batchFileNum + 1
-            
-            hrv.batchData <- NULL
-          },error = function(e){
-              showNotification("There was an error while loading at least one of the files. You can check the files actually loaded on the sidebar menu.", 
-                               type = 'err')
-          })
+      if(batchFileNum < 6){
+        file <- reactive(input$loadMultipleData)
+        if(length(file()) > 0 & is.numeric(file())){
+          return(NULL)
+        }else{
+          datapath <- parseFilePaths(volumes, file())$datapath
+          for(d in datapath){
+            tryCatch({
+              currentDatapath <- gsub("/",.Platform$file.sep, d)
+              currentDatapath <- gsub(basename(d), "", d)
+              fileName <- basename(d)
+              
+              hrv.batchData <- CreateHRVData()
+              hrv.batchData <- SetVerbose(hrv.data, TRUE)
+              hrv.batchData <- LoadBeatAscii(hrv.batchData, fileName, currentDatapath)
+              
+              batchHrvObjects[batchFileNum] <<- list(hrv.batchData)
+              batchFileList[batchFileNum] <<- fileName
+              batchRouteList[batchFileNum] <<- currentDatapath
+              batchEpisodeList[batchFileNum] <<- ""
+              batchFileNum <<- batchFileNum + 1
+              
+              hrv.batchData <- NULL
+            },error = function(e){
+                showNotification("There was an error while loading at least one of the files. You can check the files actually loaded on the sidebar menu.", 
+                                 type = 'err')
+            })
+          }
         }
-      }
-      reloadBatchDatatable()
-      updateSelectInput(session, "batchEpisodes", choices=unlist(batchFileList))
-    })
+        reloadBatchDatatable()
+        updateSelectInput(session, "batchEpisodes", choices=unlist(batchFileList))
+    }else{
+      showNotification("You have already reached the maximum number of files allowed on this mode.", type='warning')
+    }
+   })
     
     observeEvent(input$batchEpisodesBt, {
       file <- reactive(input$batchEpisodesBt)
@@ -577,6 +580,7 @@ shinyServer(function(input, output, session){
         print(index)
         tryCatch({
           hrv.batch.data <- batchHrvObjects[[index]]
+          print(hrv.batch.data)
           hrv.batch.data <- LoadEpisodesAscii(hrv.batch.data, fileName, datapath)
           batchEpisodeList[[index]] <<- paste(datapath,fileName)
           batchHrvObjects[[index]] <<- hrv.batch.data
@@ -584,8 +588,90 @@ shinyServer(function(input, output, session){
         },error = function(e){
           showNotification(loadingFileErrorStr, type = 'err')
       })
-      
     }
+    })
+    
+    observeEvent(input$runBatch, {
+      winSize <- input$bWiSize
+      winShift <- input$bWinShift
+      intepolation <- input$bInterVal
+      selectedParams <- c(input$bcol1, input$bcol2)
+      
+      data <- vector("list", batchFileNum)
+      for(i in 1:length(selectedParams)){
+          data[[i]] <- list()
+      }
+      
+      for(j in seq_len(batchFileNum - 1)){
+        
+        k = 0
+        
+        hrv.batch.data <- batchHrvObjects[[j]]
+        hrv.batch.data <- BuildNIHR(hrv.batch.data)
+        hrv.batch.data <- InterpolateNIHR(hrv.batch.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
+        hrv.batch.data <- CreateTimeAnalysis(hrv.batch.data, size=winSize, numofbins=NULL, interval=7.8125, verbose=NULL )
+        hrv.batch.data <- CreateNonLinearAnalysis(hrv.batch.data)
+        hrv.batch.data <- CreateFreqAnalysis(hrv.batch.data)
+        poincareData = PoincarePlot(hrv.batch.data, doPlot = F, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, xlim=timeLineX, ylim=timeLineY,
+                                    verbose=NULL)
+        hrv.batch.data <- CalculateCorrDim(hrv.batch.data,indexNonLinearAnalysis=1, minEmbeddingDim=2, maxEmbeddingDim=8,timeLag=1,minRadius=1, maxRadius=15, pointsRadius=20,
+                                     theilerWindow=10, corrOrder=2,doPlot=FALSE)
+        hrv.batch.data <- CalculateSampleEntropy(hrv.batch.data,indexNonLinearAnalysis=1,doPlot=FALSE)
+        hrv.batch.data <- EstimateSampleEntropy(hrv.batch.data,indexNonLinearAnalysis=1,regressionRange=c(6,10))
+        hrv.batch.data <- CalculatePowerBand(hrv.batch.data, indexFreqAnalysis = 1, size = winSize, shift = winShift, sizesp = 1024)
+        
+        timeAnalysis = hrv.batch.data$TimeAnalysis[[1]]
+        
+        for(k in 1:length(selectedParams)){
+          switchObject = selectedParams[[k]]
+          switch(switchObject,
+                 signalLen = {
+                   data[[j]][[k]] <- max(hrv.batch.data$Beat[["Time"]])
+                 },
+                 NumBeats = {
+                   data[[j]][[k]] <- length(hrv.batch.data$Beat[["Time"]])
+                 },
+                 MeanHr = {
+                   data[[j]][[k]] <- round(mean(hrv.batch.data$Beat[["niHR"]]),4)
+                 },
+                 SDNN = {
+                   data[[j]][[k]] <- round(timeAnalysis$SDNN, 4)
+                 },
+                 SDANN = {
+                   data[[j]][[k]] <- round(timeAnalysis$SDANN, 4)
+                 },
+                 SD1 = {
+                   data[[j]][[k]] <- round(poincareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1, 4)
+                 },
+                 SDNNIDX = {
+                   data[[j]][[k]] <- round(timeAnalysis$SDNNIDX, 4)
+                 },
+                 pNN50 = {
+                   data[[j]][[k]] <- round(timeAnalysis$pNN50, 4)
+                 },
+                 rMSSD = {
+                   data[[j]][[k]] <- timeAnalysis$rMMSD
+                 },
+                 IRRR = {
+                   data[[j]][[k]] <- round(timeAnalysis$IRRR, 4)
+                 },
+                 TINN = {
+                   data[[j]][[k]] <- round(timeAnalysis$TINN, 4)
+                 },
+                 HRVIndex = {
+                   data[[j]][[k]] <- round(timeAnalysis$HRVi, 4)
+                 },
+                 SD2 = {
+                   data[[j]][[k]] <- round(poincareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2, 4)
+                 },
+                 stop("Error loading data...")
+          )
+        }
+      }
+      df <- as.data.frame(do.call(cbind, data))
+      rownames(df) <- unlist(selectedParams)
+      colnames(df) <- seq_len(batchFileNum-1)
+      output$batchMainTable <- renderDataTable(df, options=list(searching=FALSE,dom=""), escape = F)
     })
     
     repaintPoincareCompare <- function(){

@@ -34,7 +34,7 @@ input[type="checkbox"]{
              left: calc(40%);
 }
 
-#mainSidebar, #frameSidebar, #poincareSidebar, #mainOptPanel{
+#mainSidebar, #frameSidebar, #poincareSidebar, #mainOptPanel, #batchSidebar{
 	border: 2px solid #C1DCDE;
 	padding: 40px;
 	background-color: white;
@@ -104,4 +104,12 @@ input[type="checkbox"]{
 
  #batchActionsWrapper button{
  	height: 40px;
+ }
+
+ .odd{
+	background-color: white !important;
+ }
+
+ #runBatch{
+ 	margin-right: 2%;
  }

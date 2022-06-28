@@ -222,7 +222,7 @@ ui<-fluidPage(
     tabPanel(id="panelBatch", value="batchTab", "Batch Mode",
              sidebarPanel(id="batchSidebar",
                fluidRow(
-                 h4("Select beats and episodes"),
+                 h4("Beats and episodes"),
                  tags$div(id = "batchActionsWrapper", 
                    shinyFilesButton("loadMultipleData", "Load data", "Select a file",multiple=T, buttonType = "default", viewtype = "detail"),
                    selectInput("batchEpisodes","",choices="",multiple=FALSE, width="150px"),
@@ -233,35 +233,30 @@ ui<-fluidPage(
                    DT::dataTableOutput("batchTable")
                ),
                fluidRow(
-                 h4("Select the parameters to calculate"),
+                 h4("Parameters to calculate"),
                   column(6,
-                         checkboxInput("bSigLen", "Signal length", TRUE),
-                         checkboxInput("bNumBeats", "Number of beats", TRUE),
-                         checkboxInput("bMeaHr", "Mean HR", TRUE),
-                         checkboxInput("bHR","HR", TRUE),
-                         checkboxInput("bSDNN", "SDNN", TRUE),
-                         checkboxInput("bSDANN", "SDANN", TRUE),
-                         checkboxInput("bSD1", "SD1", TRUE)
+                         checkboxGroupInput("bcol1", "", c("Signal length" = "signalLen", "Number of beats" = "NumBeats","Mean HR" = "MeanHr",
+                                                           "SDNN" = "SDNN", "SDANN" = "SDANN","SD1" = "SD1"))
                   ),
                   column(6,
-                         checkboxInput("bSDNNIDX", "SDNNIDX", FALSE),
-                         checkboxInput("bPNN50", "pNN50", FALSE),
-                         checkboxInput("bRMSSD", "rMSSD", FALSE),
-                         checkboxInput("bIRRR", "IRRR", FALSE),
-                         checkboxInput("bTINN", "TINN", FALSE),
-                         checkboxInput("bHrvInd", "HRV Index", FALSE),
-                         checkboxInput("bSD2", "SD2", TRUE)
-                  )
+                         checkboxGroupInput("bcol2", "", c("SDNNIDX" = "SDNNIDX", "pNN50" = "pNN50", "rMSSD" = "rMSSD", "IRRR" = "IRRR", "TINN" = "TINN",
+                                                           "HRV Index" = "HRVIndex", "SD2" = "SD2"))
+                  ),
                ),
                h4("Options"),
                fluidRow(
                  column(4, numericInput("bWiSize", "Window size", 120, width="100px")),
                  column(4, numericInput("bWinShift","Window shift", 10, width="100px")),
                  column(4, numericInput("bInterVal", "Interp. freq.", 4, width="100px"))
+               ),
+               fluidRow(
+                 column(4),
+                 column(4),
+                 column(4, actionButton("runBatch", "Run", width="90px"))
                )
              ),
              mainPanel(id="mainBatchPanel",
-                 tableOutput('table')
+                DT::dataTableOutput("batchMainTable")
              )
     ),
     tabPanel(id="panelOptions", value="optionsTab", "Options",
