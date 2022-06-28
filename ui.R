@@ -222,6 +222,7 @@ ui<-fluidPage(
     tabPanel(id="panelBatch", value="batchTab", "Batch Mode",
              sidebarPanel(id="batchSidebar",
                fluidRow(
+                 h4("Select beats and episodes"),
                  tags$div(id = "batchActionsWrapper", 
                    shinyFilesButton("loadMultipleData", "Load data", "Select a file",multiple=T, buttonType = "default", viewtype = "detail"),
                    selectInput("batchEpisodes","",choices="",multiple=FALSE, width="150px"),
@@ -232,7 +233,31 @@ ui<-fluidPage(
                    DT::dataTableOutput("batchTable")
                ),
                fluidRow(
-                 
+                 h4("Select the parameters to calculate"),
+                  column(6,
+                         checkboxInput("bSigLen", "Signal length", TRUE),
+                         checkboxInput("bNumBeats", "Number of beats", TRUE),
+                         checkboxInput("bMeaHr", "Mean HR", TRUE),
+                         checkboxInput("bHR","HR", TRUE),
+                         checkboxInput("bSDNN", "SDNN", TRUE),
+                         checkboxInput("bSDANN", "SDANN", TRUE),
+                         checkboxInput("bSD1", "SD1", TRUE)
+                  ),
+                  column(6,
+                         checkboxInput("bSDNNIDX", "SDNNIDX", FALSE),
+                         checkboxInput("bPNN50", "pNN50", FALSE),
+                         checkboxInput("bRMSSD", "rMSSD", FALSE),
+                         checkboxInput("bIRRR", "IRRR", FALSE),
+                         checkboxInput("bTINN", "TINN", FALSE),
+                         checkboxInput("bHrvInd", "HRV Index", FALSE),
+                         checkboxInput("bSD2", "SD2", TRUE)
+                  )
+               ),
+               h4("Options"),
+               fluidRow(
+                 column(4, numericInput("bWiSize", "Window size", 120, width="100px")),
+                 column(4, numericInput("bWinShift","Window shift", 10, width="100px")),
+                 column(4, numericInput("bInterVal", "Interp. freq.", 4, width="100px"))
                )
              ),
              mainPanel(id="mainBatchPanel",
