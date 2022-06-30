@@ -83,6 +83,7 @@ ui<-fluidPage(
                             ),fluidRow(id="significanceOptions",
                                 selectInput("significanceEpisodes", "Episodes", "", width="180px"),
                                 selectInput("significanceComparing", "CompareTo", "", width="180px"),
+                                radioButtons("radioSigBands", "Parameter", choices = c("ULF","VLF","HF","LF")),
                                 textOutput("significanceText")
                             ),fluidRow(
                               actionButton("sigAnBt", "Significance Analysis")

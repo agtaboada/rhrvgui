@@ -223,10 +223,10 @@ shinyServer(function(input, output, session){
       if(input$mainTabSelect == "frameTab"){
         initializeFrameInputs()
         if(beatSelected && beatInterpolated){
-          hrv.data <- CreateFreqAnalysis(hrv.data)
-          hrv.data <- CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = windowSize, shift = windowShift, sizesp = 1024, ULFmin = ulfMin, 
+          hrv.data <<- CreateFreqAnalysis(hrv.data)
+          hrv.data <<- CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = windowSize, shift = windowShift, sizesp = 1024, ULFmin = ulfMin, 
                                          ULFmax = ulfMax, VLFmin = vlfMin, VLFmax = vlfMax, LFmin = lfMin, LFmax = lfMax, HFmin = hfMin, HFmax = hfMax)
-          hrv.data <- CreateTimeAnalysis(hrv.data, size=windowSize, numofbins=NULL, interval=7.8125, verbose=NULL )
+          hrv.data <<- CreateTimeAnalysis(hrv.data, size=windowSize, numofbins=NULL, interval=7.8125, verbose=NULL )
           if(input$lfhf){#todo: checkear por que indexes no funcionan
               output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
                                                                  epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "")})
@@ -310,7 +310,7 @@ shinyServer(function(input, output, session){
             output$reportSd2 <- renderText(paste("SD2: ", round(poincareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2, 4)))
             
             output$lfhfPlotReport <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
-                                                               epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "")})
+                                                               epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "",)})
             output$ulfPlotReport <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", epColorPalette = "red",
                                                               epLegendCoords = c(2000,7500), ylab = "ULF",xlab = "", main = "")})
             output$vlfPlotReport <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", epColorPalette = "red",
@@ -733,6 +733,9 @@ shinyServer(function(input, output, session){
           }
         }
         updateSelectInput(session, "significanceComparing", choices = auxEpisodesList, selected=auxEpisodesList[1])
+        
+        epSigMain <- SplitPowerBandByEpisodes(hrv.data,length(hrv.data$FreqAnalysis), Tag=c(input$significanceEpisodes))
+        print(mean(epSigMain[["InEpisodes"]][[input$radioSigBands]]))
       }
     })
     
