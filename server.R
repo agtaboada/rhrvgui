@@ -12,6 +12,7 @@ shinyServer(function(input, output, session){
     poincareYMax <<- 800
     customPlotAxis <<- FALSE
     significanceAnalysis <<- FALSE
+    significanceEpisodeList <<- NULL
     hrv.episode <<- NULL
     fileName <<- NULL
     windowSize <<- 120
@@ -211,12 +212,6 @@ shinyServer(function(input, output, session){
       if(input$mainTabSelect == "frameTab"){
         initializeFrameInputs()
         if(beatSelected && beatInterpolated){
-          if(episodesSelected){
-            shinyjs::enable("sigAnBt")
-            listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
-            updateSelectInput(session, "significanceEpisodes", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[0])
-            updateSelectInput(session, "significanceComparing", choices = listOfEpisodeOptions, selected=listOfEpisodeOptions[1])
-          }
           hrv.data <- CreateFreqAnalysis(hrv.data)
           hrv.data <- CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = windowSize, shift = windowShift, sizesp = 1024)
           hrv.data <- CreateTimeAnalysis(hrv.data, size=windowSize, numofbins=NULL, interval=7.8125, verbose=NULL )
@@ -232,6 +227,24 @@ shinyServer(function(input, output, session){
               output$lfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF", epColorPalette = "red",
                                                                epLegendCoords = c(2000,7500), ylab = "LF", main = "", xlab="")})
               output$hrPlot <- renderPlot({PlotHR(hrv.data, Tags = "all", xlab = "time (sec.)", ylab = "Heart Rate", main = "", type = "l")})
+          }
+          if(episodesSelected){
+            shinyjs::enable("sigAnBt")
+            listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
+            names(listOfEpisodeOptions) <- NULL
+            aux <- c()
+            for(i in 1:length(listOfEpisodeOptions)){
+              ep <- listOfEpisodeOptions[[i]]
+              aux <-append(aux, gsub(" ", "", ep))
+            }
+            significanceEpisodeList <<- aux
+            updateSelectInput(session, "significanceEpisodes", choices = aux, selected=listOfEpisodeOptions[[1]])
+            updateSelectInput(session, "significanceComparing", choices = aux, selected=listOfEpisodeOptions[[1]])
+            print(ListEpisodes(hrv.data)["Tag"])
+            if(!is.null(input$significanceEpisodes) && !is.null(input$significanceComparing)){
+                #output$significanceText <- renderText(ks.test())
+           
+              }
           }
         }else{
           showNotification("Please, select a beat and interpolate it to use this menu.", type='warning')
@@ -688,6 +701,19 @@ shinyServer(function(input, output, session){
         })
       }
     }
+    
+    observeEvent(input$significanceEpisodes, {
+      chosenEpisode <- input$significanceEpisodes
+      auxEpisodesList <- significanceEpisodeList
+      if(length(auxEpisodesList) > 1){
+        for(i in 1:length(auxEpisodesList)){
+          if(auxEpisodesList[[i]] == chosenEpisode){
+            auxEpisodesList[[i]] <- paste0("OUTSIDE_", auxEpisodesList[[i]])
+          }
+        }
+        updateSelectInput(session, "significanceComparing", choices = auxEpisodesList, selected=auxEpisodesList[1])
+      }
+    })
     
     initializeFrameInputs <- function(){
       hideElement(id="significanceRow", anim=TRUE, animType="fade", time=0.4, selector="NULL", asis=FALSE)
