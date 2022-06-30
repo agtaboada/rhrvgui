@@ -272,16 +272,18 @@ shinyServer(function(input, output, session){
             hrv.data <- InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
             hrv.data <- CreateTimeAnalysis(hrv.data, size=windowSize, numofbins=NULL, interval=7.8125, verbose=NULL )
             hrv.data <- CreateNonLinearAnalysis(hrv.data)
-            hrv.data <- CreateFreqAnalysis(hrv.data)
+            if(is.null(hrv.data$FreqAnalysis)){
+              hrv.data <- CreateFreqAnalysis(hrv.data)
+              hrv.data <- CalculateCorrDim(hrv.data,indexNonLinearAnalysis=1, minEmbeddingDim=2, maxEmbeddingDim=8,timeLag=1,minRadius=1, maxRadius=15, pointsRadius=20,
+                                           theilerWindow=10, corrOrder=2,doPlot=FALSE)
+              hrv.data <- CalculateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,doPlot=FALSE)
+              hrv.data <- EstimateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,regressionRange=c(6,10))
+              hrv.data <- CalculatePowerBand(hrv.data, indexFreqAnalysis = 1, size = windowSize, shift = windowShift, sizesp = 1024, ULFmin = ulfMin, 
+                                             ULFmax = ulfMax, VLFmin = vlfMin, VLFmax = vlfMax, LFmin = lfMin, LFmax = lfMax, HFmin = hfMin, HFmax = hfMax)
+            }
+            
             poincareData = PoincarePlot(hrv.data, doPlot = F, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, xlim=timeLineX, ylim=timeLineY,
                                         verbose=NULL)
-            hrv.data <- CalculateCorrDim(hrv.data,indexNonLinearAnalysis=1, minEmbeddingDim=2, maxEmbeddingDim=8,timeLag=1,minRadius=1, maxRadius=15, pointsRadius=20,
-                                         theilerWindow=10, corrOrder=2,doPlot=FALSE)
-            hrv.data <- CalculateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,doPlot=FALSE)
-            hrv.data <- EstimateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,regressionRange=c(6,10))
-            hrv.data <- CalculatePowerBand(hrv.data, indexFreqAnalysis = 1, size = windowSize, shift = windowShift, sizesp = 1024, ULFmin = ulfMin, 
-                                           ULFmax = ulfMax, VLFmin = vlfMin, VLFmax = vlfMax, LFmin = lfMin, LFmax = lfMax, HFmin = hfMin, HFmax = hfMax)
-            
             timeAnalysis = hrv.data$TimeAnalysis[[1]]
             frameNumber = tail(hrv.data$Beat[["Time"]], n=1) / windowShift
             
@@ -310,7 +312,7 @@ shinyServer(function(input, output, session){
             output$reportSd2 <- renderText(paste("SD2: ", round(poincareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2, 4)))
             
             output$lfhfPlotReport <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
-                                                               epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "",)})
+                                                               epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "")})
             output$ulfPlotReport <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", epColorPalette = "red",
                                                               epLegendCoords = c(2000,7500), ylab = "ULF",xlab = "", main = "")})
             output$vlfPlotReport <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", epColorPalette = "red",
