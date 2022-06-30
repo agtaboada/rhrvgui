@@ -174,7 +174,15 @@ ui<-fluidPage(
                          textOutput("interpolationValueRep", inline = F),
                          textOutput("frameLength", inline = F),
                          textOutput("frameShift", inline = F),
-                         textOutput("frameNumber", inline = F)
+                         textOutput("frameNumber", inline = F),
+                         textOutput("ULFmin", inline = F),
+                         textOutput("ULFmax", inline = F),
+                         textOutput("VLFmin", inline = F),
+                         textOutput("VLFmax", inline = F),
+                         textOutput("LFmin", inline = F),
+                         textOutput("LFmax", inline = F),
+                         textOutput("HFmin", inline = F),
+                         textOutput("HFmax", inline = F)
                        )
                      )
                    )
@@ -262,32 +270,55 @@ ui<-fluidPage(
     tabPanel(id="panelOptions", value="optionsTab", "Options",
              tabPanel("Frame-based evolution",
                       mainPanel(id="mainOptPanel",
-                                fluidRow(
-                                  h4("Interpolate")
+                                column(6,
+                                  fluidRow(
+                                    h4("Interpolate")
+                                  ),
+                                  fluidRow(
+                                    sliderInput("sliderInterp", "Frequency", min=1, max=25, value=4, step = 0.1)
+                                  ),
+                                  fluidRow(
+                                    h4("Poincare")
+                                  ),
+                                  fluidRow(
+                                    checkboxInput("poinCustomPlot", "Use custom axis values", FALSE)
+                                  ),
+                                  fluidRow(
+                                    column(2,numericInput("poincarexMin", "Min. X", -800, width="100px")),
+                                    column(2,numericInput("poincarexMax", "Max. X", 800, width="100px"))
+                                  ),
+                                  fluidRow(
+                                    column(2, numericInput("poincareyMin", "Min. Y", -800, width="100px")),
+                                    column(2, numericInput("poincareyMax", "Max. Y", 800,  width="100px"))
+                                  ),
+                                  fluidRow(
+                                    h4("Window options")
+                                  ),
+                                  fluidRow(
+                                    column(2, numericInput("windowSize", "Window size", 120, width="100px")),
+                                    column(2, numericInput("windowShift","Window shift", 10, width="100px"))
+                                  )
                                 ),
-                                fluidRow(
-                                  sliderInput("sliderInterp", "Frequency", min=1, max=25, value=4, step = 0.1)
-                                ),
-                                fluidRow(
-                                  h4("Poincare")
-                                ),
-                                fluidRow(
-                                  checkboxInput("poinCustomPlot", "Use custom axis values", FALSE)
-                                ),
-                                fluidRow(
-                                  column(2,numericInput("poincarexMin", "Min. X", -800, width="100px")),
-                                  column(2,numericInput("poincarexMax", "Max. X", 800, width="100px"))
-                                ),
-                                fluidRow(
-                                  column(2, numericInput("poincareyMin", "Min. Y", -800, width="100px")),
-                                  column(2, numericInput("poincareyMax", "Max. Y", 800,  width="100px"))
-                                ),
-                                fluidRow(
-                                  h4("Window options")
-                                ),
-                                fluidRow(
-                                  column(2, numericInput("windowSize", "Window size", 120, width="100px")),
-                                  column(2, numericInput("windowShift","Window shift", 10, width="100px"))
+                                column(6,
+                                  fluidRow(
+                                    h4("Freq. Band Limits")
+                                  ),
+                                  fluidRow(
+                                    column(3, numericInput("ulfMin", "ULF min", 0.0, width = "100px")),
+                                    column(3, numericInput("ulfMax", "ULF max", 0.03, width = "100px"))
+                                  ),
+                                  fluidRow(
+                                    column(3, numericInput("vlfMin", "VLF min", 0.03, width = "100px")),
+                                    column(3, numericInput("vlfMax", "VLF max", 0.05, width = "100px"))
+                                  ),
+                                  fluidRow(
+                                    column(3, numericInput("lfMin", "LF min", 0.05, width = "100px")),
+                                    column(3, numericInput("lfMax", "LF max", 0.15, width = "100px"))
+                                  ),
+                                  fluidRow(
+                                    column(3, numericInput("hfMin", "HF min", 0.15, width = "100px")),
+                                    column(3, numericInput("hfMax", "HF max", 0.4, width = "100px"))
+                                  )
                                 )
                       )
              )

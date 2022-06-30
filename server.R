@@ -23,6 +23,14 @@ shinyServer(function(input, output, session){
     batchHrvObjects <<- list()
     batchEpisodeList <<- list()
     batchFileNum <<- 1
+    ulfMin <<- 0
+    ulfMax <<- 0.03
+    vlfMin <<- 0.03
+    vlfMax <<- 0.05
+    lfMin <<- 0.05
+    lfMax <<- 0.15
+    hfMin <<- 0.15
+    hfMax <<- 0.4
     
     shinyjs::disable("sigAnBt")
     shinyjs::disable("filterHrButton")
@@ -171,6 +179,9 @@ shinyServer(function(input, output, session){
                   updateSelectInput(session, "poincareEpisodes", choices = listOfEpisodeOptions, selected="GLOBAL")
                   episodesSelected <<- TRUE
                   shinyjs::enable("clearEpButton")
+                  if(beatInterpolated){
+                    hrv.data <<- InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
+                  }
                   output$mainGraph<-renderPlot({
                     PlotNIHR(hrv.data, Indexes="all", main="Data with episodes")
                   })
@@ -213,7 +224,8 @@ shinyServer(function(input, output, session){
         initializeFrameInputs()
         if(beatSelected && beatInterpolated){
           hrv.data <- CreateFreqAnalysis(hrv.data)
-          hrv.data <- CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = windowSize, shift = windowShift, sizesp = 1024)
+          hrv.data <- CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = windowSize, shift = windowShift, sizesp = 1024, ULFmin = ulfMin, 
+                                         ULFmax = ulfMax, VLFmin = vlfMin, VLFmax = vlfMax, LFmin = lfMin, LFmax = lfMax, HFmin = hfMin, HFmax = hfMax)
           hrv.data <- CreateTimeAnalysis(hrv.data, size=windowSize, numofbins=NULL, interval=7.8125, verbose=NULL )
           if(input$lfhf){#todo: checkear por que indexes no funcionan
               output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
@@ -267,7 +279,8 @@ shinyServer(function(input, output, session){
                                          theilerWindow=10, corrOrder=2,doPlot=FALSE)
             hrv.data <- CalculateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,doPlot=FALSE)
             hrv.data <- EstimateSampleEntropy(hrv.data,indexNonLinearAnalysis=1,regressionRange=c(6,10))
-            hrv.data <- CalculatePowerBand(hrv.data, indexFreqAnalysis = 1, size = windowSize, shift = windowShift, sizesp = 1024)
+            hrv.data <- CalculatePowerBand(hrv.data, indexFreqAnalysis = 1, size = windowSize, shift = windowShift, sizesp = 1024, ULFmin = ulfMin, 
+                                           ULFmax = ulfMax, VLFmin = vlfMin, VLFmax = vlfMax, LFmin = lfMin, LFmax = lfMax, HFmin = hfMin, HFmax = hfMax)
             
             timeAnalysis = hrv.data$TimeAnalysis[[1]]
             frameNumber = tail(hrv.data$Beat[["Time"]], n=1) / windowShift
@@ -311,6 +324,14 @@ shinyServer(function(input, output, session){
             output$frameLength <- renderText(paste("Frame length: ", windowSize))
             output$frameShift <- renderText(paste("Frame shift: ", windowShift))
             output$frameNumber <- renderText(paste("Number of frames: ", round(frameNumber, 0)))
+            output$ULFmin <- renderText(paste("ULF min: ", ulfMin))
+            output$ULFmax <- renderText(paste("ULF max: ", ulfMax))
+            output$VLFmin <- renderText(paste("VLF min: ", vlfMin))
+            output$VLFmax <- renderText(paste("VLF min: ", vlfMax))
+            output$LFmin <- renderText(paste("LF min: ", lfMin))
+            output$LFmax <- renderText(paste("LF max: ", lfMax))
+            output$HFmin <- renderText(paste("HF min: ", hfMin))
+            output$HFmax <- renderText(paste("HF max: ", hfMin))
             
             showElement(id="panelReportMainPanel", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
           }else{
@@ -713,6 +734,38 @@ shinyServer(function(input, output, session){
         }
         updateSelectInput(session, "significanceComparing", choices = auxEpisodesList, selected=auxEpisodesList[1])
       }
+    })
+    
+    observeEvent(input$ulfMin, {
+      ulfMin <<- input$ulfMin
+    })
+    
+    observeEvent(input$ulfMax, {
+      ulfMax <<- input$ulfMax
+    })
+    
+    observeEvent(input$vlfMin, {
+      vlfMin <<- input$vlfMin
+    })
+    
+    observeEvent(input$vlfMax, {
+      vlfMax <<- input$vlfMax
+    })
+    
+    observeEvent(input$lfMin, {
+      lfMin <<- input$lfMin
+    })
+    
+    observeEvent(input$lfMax, {
+      lfMax <<- input$lfMax
+    })
+    
+    observeEvent(input$hfMin, {
+      hfMin <<- input$hfMin
+    })
+    
+    observeEvent(input$hfMax, {
+      hfMax <<- input$hfMax
     })
     
     initializeFrameInputs <- function(){
