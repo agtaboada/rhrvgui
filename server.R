@@ -272,7 +272,7 @@ shinyServer(function(input, output, session){
             hrv.data <- InterpolateNIHR(hrv.data, freqhr = interpolationValue, method = c("linear", "spline"), verbose=NULL)
             hrv.data <- CreateTimeAnalysis(hrv.data, size=windowSize, numofbins=NULL, interval=7.8125, verbose=NULL )
             hrv.data <- CreateNonLinearAnalysis(hrv.data)
-            if(is.null(hrv.data$FreqAnalysis)){
+            if(length(hrv.data$FreqAnalysis) == 0){
               hrv.data <- CreateFreqAnalysis(hrv.data)
               hrv.data <- CalculateCorrDim(hrv.data,indexNonLinearAnalysis=1, minEmbeddingDim=2, maxEmbeddingDim=8,timeLag=1,minRadius=1, maxRadius=15, pointsRadius=20,
                                            theilerWindow=10, corrOrder=2,doPlot=FALSE)
