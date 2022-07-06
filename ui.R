@@ -284,19 +284,19 @@ ui<-fluidPage(
                                     checkboxInput("poinCustomPlot", "Use custom axis values", FALSE)
                                   ),
                                   fluidRow(
-                                    column(2,numericInput("poincarexMin", "Min. X", -800, width="100px")),
-                                    column(2,numericInput("poincarexMax", "Max. X", 800, width="100px"))
+                                    column(4,numericInput("poincarexMin", "Min. X", -800, width="400px")),
+                                    column(4,numericInput("poincarexMax", "Max. X", 800, width="400px"))
                                   ),
                                   fluidRow(
-                                    column(2, numericInput("poincareyMin", "Min. Y", -800, width="100px")),
-                                    column(2, numericInput("poincareyMax", "Max. Y", 800,  width="100px"))
+                                    column(4, numericInput("poincareyMin", "Min. Y", -800, width="400px")),
+                                    column(4, numericInput("poincareyMax", "Max. Y", 800,  width="400px"))
                                   ),
                                   fluidRow(
                                     h4("Window options")
                                   ),
                                   fluidRow(
-                                    column(2, numericInput("windowSize", "Window size", 120, width="100px")),
-                                    column(2, numericInput("windowShift","Window shift", 10, width="100px"))
+                                    column(4, numericInput("windowSize", "Window size", 120, width="400px")),
+                                    column(4, numericInput("windowShift","Window shift", 10, width="400px"))
                                   )
                                 ),
                                 column(6,
@@ -304,20 +304,20 @@ ui<-fluidPage(
                                     h4("Freq. Band Limits")
                                   ),
                                   fluidRow(
-                                    column(3, numericInput("ulfMin", "ULF min", 0.0, width = "100px")),
-                                    column(3, numericInput("ulfMax", "ULF max", 0.03, width = "100px"))
+                                    column(4, numericInput("ulfMin", "ULF min", 0.0, width = "200px")),
+                                    column(4, numericInput("ulfMax", "ULF max", 0.03, width = "200px"))
                                   ),
                                   fluidRow(
-                                    column(3, numericInput("vlfMin", "VLF min", 0.03, width = "100px")),
-                                    column(3, numericInput("vlfMax", "VLF max", 0.05, width = "100px"))
+                                    column(4, numericInput("vlfMin", "VLF min", 0.03, width = "200px")),
+                                    column(4, numericInput("vlfMax", "VLF max", 0.05, width = "200px"))
                                   ),
                                   fluidRow(
-                                    column(3, numericInput("lfMin", "LF min", 0.05, width = "100px")),
-                                    column(3, numericInput("lfMax", "LF max", 0.15, width = "100px"))
+                                    column(4, numericInput("lfMin", "LF min", 0.05, width = "200px")),
+                                    column(4, numericInput("lfMax", "LF max", 0.15, width = "200px"))
                                   ),
                                   fluidRow(
-                                    column(3, numericInput("hfMin", "HF min", 0.15, width = "100px")),
-                                    column(3, numericInput("hfMax", "HF max", 0.4, width = "100px"))
+                                    column(4, numericInput("hfMin", "HF min", 0.15, width = "200px")),
+                                    column(4, numericInput("hfMax", "HF max", 0.4, width = "200px"))
                                   )
                                 )
                       )

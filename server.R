@@ -9,7 +9,7 @@ shinyServer(function(input, output, session){
     poincarexMin <<- -800
     poincareyMin <<- -800
     poincarexMax <<- 800
-    poincareYMax <<- 800
+    poincareyMax <<- 800
     customPlotAxis <<- FALSE
     significanceAnalysis <<- FALSE
     significanceEpisodeList <<- NULL
@@ -229,7 +229,7 @@ shinyServer(function(input, output, session){
           hrv.data <<- CreateTimeAnalysis(hrv.data, size=windowSize, numofbins=NULL, interval=7.8125, verbose=NULL )
           if(input$lfhf){#todo: checkear por que indexes no funcionan
               output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
-                                                                 epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "")})
+                                                                 epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "", Tags="all", Indexes="all")})
               output$ulfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", epColorPalette = "red",
                                                                  epLegendCoords = c(2000,7500), ylab = "ULF",xlab = "", main = "")})
               output$vlfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", epColorPalette = "red",
@@ -306,8 +306,13 @@ shinyServer(function(input, output, session){
             output$tinn <- renderText({paste("TINN: ", round(timeAnalysis$TINN, 4))})
             output$hrvIndex <- renderText({paste("HRV Index: ", round(timeAnalysis$HRVi, 4))})
             
-            output$reportPoincarePlot <- renderPlot(PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
+            if(customPlotAxis){
+              output$reportPoincarePlot <- renderPlot(PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
                                                                  xlim=timeLineX, ylim=timeLineY, verbose=NULL))
+            }else{
+              output$reportPoincarePlot <- renderPlot(PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
+                                                                   verbose=NULL))
+            }
             output$reportSd1 <- renderText(paste("SD1: ", round(poincareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1, 4)))
             output$reportSd2 <- renderText(paste("SD2: ", round(poincareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2, 4)))
             
