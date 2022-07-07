@@ -21,7 +21,6 @@ shinyServer(function(input, output, session){
     batchFileList <<- list()
     batchRouteList <<- list()
     batchHrvObjects <<- list()
-    batchEpisodeList <<- list()
     batchFileNum <<- 1
     ulfMin <<- 0
     ulfMax <<- 0.03
@@ -31,6 +30,8 @@ shinyServer(function(input, output, session){
     lfMax <<- 0.15
     hfMin <<- 0.15
     hfMax <<- 0.4
+    significanceMain <<- NULL
+    significanceComparing <<- NULL
     
     shinyjs::disable("sigAnBt")
     shinyjs::disable("filterHrButton")
@@ -41,13 +42,14 @@ shinyServer(function(input, output, session){
     
     hideElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
     hideElement(id="panelReportMainPanel", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+    hideElement(id="significanceText", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+    hideElement(id="frameHistogram",anim = F, selector=NULL, asis = FALSE)
     
     volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
     
     shinyFileChoose(input, "loadHrButton", roots = volumes, session = session)
     shinyFileChoose(input, "loadEpButton", roots = volumes, session = session)
     shinyFileChoose(input, "loadMultipleData", roots = volumes, session = session)
-    shinyFileChoose(input, "batchEpisodesBt", roots = volumes, session = session)
     
     hrv.data = reactiveVal()
     hrv.data = CreateHRVData()
@@ -59,13 +61,7 @@ shinyServer(function(input, output, session){
       batchFileList[[selectedRow]] <<- NULL
       batchRouteList[[selectedRow]] <<- NULL
       batchHrvObjects[[selectedRow]] <<- NULL
-      batchEpisodeList[[selectedRow]] <<- NULL
       reloadBatchDatatable()
-      if(batchFileNum > 1){
-        updateSelectInput(session, "batchEpisodes", choices=unlist(batchFileList))
-      }else{
-        updateSelectInput(session, "batchEpisodes", choices = c(""))
-      }
     }
     
     deleteEp <- function(selectedEp){
@@ -98,7 +94,6 @@ shinyServer(function(input, output, session){
       df <- data.frame(
         Name = unlist(batchFileList),
         Route = unlist(batchRouteList),
-        Episodes = unlist(batchEpisodeList),
         Delete = paste(shinyInput(actionButton, batchFileNum-1, 'button_', label = "Beat"),
                           shinyInput(actionButton, batchFileNum-1, 'epButton_', label = "Episodes")),
         stringsAsFactors = FALSE
@@ -110,11 +105,6 @@ shinyServer(function(input, output, session){
       onclick(paste0("button_",3), deleteBeat(3))
       onclick(paste0("button_",4), deleteBeat(4))
       onclick(paste0("button_",5), deleteBeat(5))
-      onclick(paste0("epButton_",1), deleteEp(1))
-      onclick(paste0("epButton_",2), deleteEp(2))
-      onclick(paste0("epButton_",3), deleteEp(3))
-      onclick(paste0("epButton_",4), deleteEp(4))
-      onclick(paste0("epButton_",5), deleteEp(5))
       print("onclicks loaded successfully")
       output$batchTable <- renderDataTable(df, options=list(searching=FALSE,dom=""), escape = F)
       print("exiting reload func")
@@ -227,19 +217,7 @@ shinyServer(function(input, output, session){
           hrv.data <<- CalculatePowerBand(hrv.data,length(hrv.data$FreqAnalysis), size = windowSize, shift = windowShift, sizesp = 1024, ULFmin = ulfMin, 
                                          ULFmax = ulfMax, VLFmin = vlfMin, VLFmax = vlfMax, LFmin = lfMin, LFmax = lfMax, HFmin = hfMin, HFmax = hfMax)
           hrv.data <<- CreateTimeAnalysis(hrv.data, size=windowSize, numofbins=NULL, interval=7.8125, verbose=NULL )
-          if(input$lfhf){#todo: checkear por que indexes no funcionan
-              output$lfhfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF/HF",
-                                                                 epColorPalette = "red", ylab = "LF/HF",xlab = "", main = "", Tags="all", Indexes="all")})
-              output$ulfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "ULF", epColorPalette = "red",
-                                                                 epLegendCoords = c(2000,7500), ylab = "ULF",xlab = "", main = "")})
-              output$vlfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "VLF", epColorPalette = "red",
-                                                                epLegendCoords = c(2000,7500), ylab = "VLF",xlab = "", main = "")})
-              output$hfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "HF", epColorPalette = "red",
-                                                                epLegendCoords = c(2000,7500), ylab = "HF",xlab = "", main = "")})
-              output$lfPlot <- renderPlot({PlotSinglePowerBand(hrv.data, length(hrv.data$FreqAnalysis), "LF", epColorPalette = "red",
-                                                               epLegendCoords = c(2000,7500), ylab = "LF", main = "", xlab="")})
-              output$hrPlot <- renderPlot({PlotHR(hrv.data, Tags = "all", xlab = "time (sec.)", ylab = "Heart Rate", main = "", type = "l")})
-          }
+          output$mainFramePlot <- renderPlot(PlotPowerBand(hrv.data, length(hrv.data$FreqAnalysis), hr=T, Indexes="all", Tags="all"))
           if(episodesSelected){
             shinyjs::enable("sigAnBt")
             listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
@@ -253,10 +231,6 @@ shinyServer(function(input, output, session){
             updateSelectInput(session, "significanceEpisodes", choices = aux, selected=listOfEpisodeOptions[[1]])
             updateSelectInput(session, "significanceComparing", choices = aux, selected=listOfEpisodeOptions[[1]])
             print(ListEpisodes(hrv.data)["Tag"])
-            if(!is.null(input$significanceEpisodes) && !is.null(input$significanceComparing)){
-                #output$significanceText <- renderText(ks.test())
-           
-              }
           }
         }else{
           showNotification("Please, select a beat and interpolate it to use this menu.", type='warning')
@@ -549,12 +523,16 @@ shinyServer(function(input, output, session){
       if(significanceAnalysis == TRUE){
         showElement(id="significanceRow", anim = TRUE, animType="fade", time=0.4, selector=NULL, asis = FALSE)
         showElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
-        hideElement(id="mainFrameRow", anim=TRUE, animType="fade", time=0.4, selector="NULL", asis=FALSE)
+        showElement(id="significanceText", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+        showElement(id="frameHistogram",anim = F, selector=NULL, asis = FALSE)
+        hideElement(id="mainFramePlot", anim=F, selector="NULL", asis=FALSE)
         updateActionButton(session, "sigAnBt",label = "Back")
       }else{
         hideElement(id="significanceRow", anim=TRUE, animType="fade", time=0.4, selector="NULL", asis=FALSE)
         hideElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
-        showElement(id="mainFrameRow", anim = TRUE, animType="fade", time=0.4, selector=NULL, asis = FALSE)
+        hideElement(id="significanceText", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+        hideElement(id="frameHistogram",anim = F, selector=NULL, asis = FALSE)
+        showElement(id="mainFramePlot", anim = F, selector=NULL, asis = FALSE)
         updateActionButton(session, "sigAnBt",label = "Significance Analysis")
       }
     })
@@ -602,35 +580,10 @@ shinyServer(function(input, output, session){
           }
         }
         reloadBatchDatatable()
-        updateSelectInput(session, "batchEpisodes", choices=unlist(batchFileList))
     }else{
       showNotification("You have already reached the maximum number of files allowed on this mode.", type='warning')
     }
    })
-    
-    observeEvent(input$batchEpisodesBt, {
-      file <- reactive(input$batchEpisodesBt)
-      if(length(file()) > 0 & is.numeric(file())){
-        return(NULL)
-      }else{
-        index <- which(batchFileList == input$batchEpisodes)
-        datapath <- parseFilePaths(volumes, file())$datapath
-        fileName <- basename(datapath)
-        datapath <- gsub("/",.Platform$file.sep, datapath)
-        datapath <- gsub(basename(datapath), "", datapath)
-        print(index)
-        tryCatch({
-          hrv.batch.data <- batchHrvObjects[[index]]
-          print(hrv.batch.data)
-          hrv.batch.data <- LoadEpisodesAscii(hrv.batch.data, fileName, datapath)
-          batchEpisodeList[[index]] <<- paste(datapath,fileName)
-          batchHrvObjects[[index]] <<- hrv.batch.data
-          reloadBatchDatatable()
-        },error = function(e){
-          showNotification(loadingFileErrorStr, type = 'err')
-      })
-    }
-    })
     
     observeEvent(input$runBatch, {
       winSize <- input$bWiSize
@@ -730,6 +683,22 @@ shinyServer(function(input, output, session){
       }
     }
     
+    renderKsTest <- function(){
+      if(!is.null(significanceMain) && !is.null(significanceComparing)){
+        tryCatch({
+          text <- capture.output(print(ks.test(significanceMain[[input$radioSigBands]], significanceComparing[[input$radioSigBands]])))
+          text <- gsub("Asymptotic two-sample Kolmogorov-Smirnov test data: significanceMain and significanceComparing", "",text)
+          output$significanceText <- renderText(text)
+          output$frameHistogram <- renderPlot({
+            hist(significanceMain[[input$radioSigBands]],col=rgb(1,0,0,0.2))
+            hist(significanceComparing[[input$radioSigBands]], col=rgb(1,0,0,0.2), add=T)
+          })
+        },error = function(e){
+          output$significanceText <- renderText("Not enough data to perform KS test.")
+        })
+      }
+    }
+    
     observeEvent(input$significanceEpisodes, {
       chosenEpisode <- input$significanceEpisodes
       auxEpisodesList <- significanceEpisodeList
@@ -742,7 +711,23 @@ shinyServer(function(input, output, session){
         updateSelectInput(session, "significanceComparing", choices = auxEpisodesList, selected=auxEpisodesList[1])
         
         epSigMain <- SplitPowerBandByEpisodes(hrv.data,length(hrv.data$FreqAnalysis), Tag=c(input$significanceEpisodes))
-        print(mean(epSigMain[["InEpisodes"]][[input$radioSigBands]]))
+        significanceMain <<- epSigMain[["InEpisodes"]]
+        renderKsTest()
+      }
+    })
+    
+    observeEvent(input$significanceComparing, {
+      chosenEpisode <- input$significanceComparing
+      if(length(significanceEpisodeList) > 1){
+        if(grepl("OUTSIDE_", chosenEpisode, fixed = T )){
+          chosenEpisode <- gsub("OUTSIDE_","",chosenEpisode)
+          episodios <- SplitPowerBandByEpisodes(hrv.data, length(hrv.data$FreqAnalysis), Tag=c(chosenEpisode))
+          significanceComparing <<- episodios[["OutEpisodes"]]
+        }else{
+          episodios <- SplitPowerBandByEpisodes(hrv.data, length(hrv.data$FreqAnalysis), Tag=c(chosenEpisode))
+          significanceComparing <<- episodios[["InEpisodes"]]
+        }
+        renderKsTest()
       }
     })
     

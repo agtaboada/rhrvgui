@@ -69,36 +69,33 @@ ui<-fluidPage(
              fluidPage(
                useShinyjs(),
                sidebarPanel(id="frameSidebar",
-                            fluidRow(
-                              h3("Visible Bands")
-                              ),
-                            fluidRow(
-                                checkboxInput("lfhf", "LF/HF", TRUE),
-                                checkboxInput("ulf", "ULF", TRUE),
-                                checkboxInput("vlf", "VLF", TRUE),
-                                checkboxInput("hf", "HF", TRUE),
-                                checkboxInput("lf", "LF", TRUE),
-                                checkboxInput("hr", "HR", TRUE)
-                            ),fluidRow(id="significanceOptions",
+                         #   fluidRow(
+                          #    h3("Visible Bands")
+                          #    ),
+                         #   fluidRow(
+                         #      checkboxInput("lfhf", "LF/HF", TRUE),
+                         #      checkboxInput("ulf", "ULF", TRUE),
+                         ##       checkboxInput("vlf", "VLF", TRUE),
+                         #       checkboxInput("hf", "HF", TRUE),
+                         #       checkboxInput("lf", "LF", TRUE),
+                         #      checkboxInput("hr", "HR", TRUE)
+                           #),
+                            fluidRow(id="significanceOptions",
                                 selectInput("significanceEpisodes", "Episodes", "", width="180px"),
                                 selectInput("significanceComparing", "CompareTo", "", width="180px"),
-                                radioButtons("radioSigBands", "Parameter", choices = c("ULF","VLF","HF","LF")),
-                                textOutput("significanceText")
-                            ),fluidRow(
+                                radioButtons("radioSigBands", "Parameter", choices = c("ULF","VLF","HF","LF"))
+                            ),
+                            fluidRow(
+                              textOutput("significanceText")
+                            ),
+                            fluidRow(
                               actionButton("sigAnBt", "Significance Analysis")
                             )
                ),
                mainPanel(
                  fluidRow(id="mainFrameRow",
-                   plotOutput("lfhfPlot", width = "1000px",height = "180px",inline = FALSE),
-                   plotOutput("ulfPlot", width = "1000px",height = "180px",inline = FALSE),
-                   plotOutput("vlfPlot", width = "1000px",height = "180px",inline = FALSE),
-                   plotOutput("hfPlot", width = "1000px",height = "180px",inline = FALSE),
-                   plotOutput("lfPlot", width = "1000px",height = "180px",inline = FALSE),
-                   plotOutput("hrPlot", width = "1000px", height = "180px", inline = F)
-                 ),
-                fluidRow(id="significanceRow",
-                  plotOutput("frameHistogram", width="1000px", height="700px", inline = FALSE)
+                  plotOutput("mainFramePlot", width = "1000px",height = "800px",inline = FALSE),
+                  plotOutput("frameHistogram", width="1000px", height="800px", inline = FALSE)
                 )
              )
           )
