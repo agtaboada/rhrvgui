@@ -5,6 +5,7 @@ library(shinyjs)
 library(tkrplot)
 library(stringr)
 library(DT)
+library(ggplot2)
 
 ui<-fluidPage(
   shinyjs::useShinyjs(),
@@ -69,24 +70,15 @@ ui<-fluidPage(
              fluidPage(
                useShinyjs(),
                sidebarPanel(id="frameSidebar",
-                         #   fluidRow(
-                          #    h3("Visible Bands")
-                          #    ),
-                         #   fluidRow(
-                         #      checkboxInput("lfhf", "LF/HF", TRUE),
-                         #      checkboxInput("ulf", "ULF", TRUE),
-                         ##       checkboxInput("vlf", "VLF", TRUE),
-                         #       checkboxInput("hf", "HF", TRUE),
-                         #       checkboxInput("lf", "LF", TRUE),
-                         #      checkboxInput("hr", "HR", TRUE)
-                           #),
                             fluidRow(id="significanceOptions",
                                 selectInput("significanceEpisodes", "Episodes", "", width="180px"),
                                 selectInput("significanceComparing", "CompareTo", "", width="180px"),
                                 radioButtons("radioSigBands", "Parameter", choices = c("ULF","VLF","HF","LF"))
                             ),
                             fluidRow(
-                              textOutput("significanceText")
+                              textOutput("significanceText1"),
+                              textOutput("significanceText2"),
+                              textOutput("significanceText3")
                             ),
                             fluidRow(
                               actionButton("sigAnBt", "Significance Analysis")
@@ -94,8 +86,8 @@ ui<-fluidPage(
                ),
                mainPanel(
                  fluidRow(id="mainFrameRow",
-                  plotOutput("mainFramePlot", width = "1000px",height = "800px",inline = FALSE),
-                  plotOutput("frameHistogram", width="1000px", height="800px", inline = FALSE)
+                  plotOutput("mainFramePlot", width = "1100px",height = "900px",inline = FALSE),
+                  plotOutput("frameHistogram", width="1100px", height="900px", inline = FALSE)
                 )
              )
           )

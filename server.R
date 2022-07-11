@@ -99,7 +99,6 @@ shinyServer(function(input, output, session){
         stringsAsFactors = FALSE
       )
       print("data frame created successfully")
-      ##por algun motivo el siguiente bloque de codigo no puede generarse con un bucle...#
       onclick(paste0("button_",1), deleteBeat(1))
       onclick(paste0("button_",2), deleteBeat(2))
       onclick(paste0("button_",3), deleteBeat(3))
@@ -122,7 +121,19 @@ shinyServer(function(input, output, session){
         datapath <- gsub("/",.Platform$file.sep, datapath)
         datapath <- gsub(basename(datapath), "", datapath)
         fileName <<- parseFilePaths(volumes, file())$name
-        tryCatch({hrv.data = LoadBeatAscii(hrv.data, parseFilePaths(volumes, file())$name, datapath)
+        tryCatch({
+                  records <- readLines(paste0(datapath,fileName), n=5)
+                  record1 <- as.integer(records[1])
+                  record2 <- as.integer(records[2])
+                  record5 <- as.integer(records[5])
+                  print((record5 - record1)/(record2 - record1))
+                  if(((record5 - record1)/(record2 - record1)) >= 3){
+                    print("Loading ASCII...")
+                    hrv.data = LoadBeatAscii(hrv.data, parseFilePaths(volumes, file())$name, datapath)
+                  }else{
+                    print("Loading RR...")
+                    hrv.data = LoadBeatRR(hrv.data, parseFilePaths(volumes, file())$name, datapath, scale=0.001)
+                  }
                   hrv.data = BuildNIHR(hrv.data)
                   hrv.data <<- hrv.data
                   shinyjs::enable("filterHrButton")
@@ -135,6 +146,7 @@ shinyServer(function(input, output, session){
                   shinyjs::show("mainPoinPanel")
         },error = function(e){
           showNotification(loadingFileErrorStr, type = 'err')
+          print(e)
         })
       }
     })
@@ -332,7 +344,7 @@ shinyServer(function(input, output, session){
                 pointcareData = PoincarePlot(hrv.data, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE,
                                              xlim=timeLineX, ylim=timeLineY, verbose=NULL)
               }else{
-                PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL)
+                pointcareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL)
               }
               refreshSd1(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
               refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
@@ -353,7 +365,7 @@ shinyServer(function(input, output, session){
                   pointcareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, xlim=timeLineX,
                                                ylim=timeLineY, verbose=NULL)
                 }else{
-                  poincareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL)
+                  pointcareData = PoincarePlot(hrv.episode, doPlot = T, indexNonLinearAnalysis=1,timeLag=1,confidenceEstimation = TRUE, verbose=NULL)
                 }
                 refreshSd1(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD1)
                 refreshSd2(pointcareData$NonLinearAnalysis[[1]]$PoincarePlot$SD2)
@@ -687,11 +699,18 @@ shinyServer(function(input, output, session){
       if(!is.null(significanceMain) && !is.null(significanceComparing)){
         tryCatch({
           text <- capture.output(print(ks.test(significanceMain[[input$radioSigBands]], significanceComparing[[input$radioSigBands]])))
-          text <- gsub("Asymptotic two-sample Kolmogorov-Smirnov test data: significanceMain and significanceComparing", "",text)
-          output$significanceText <- renderText(text)
+          testRes <- ks.test(significanceMain[[input$radioSigBands]], significanceComparing[[input$radioSigBands]])
+          testRes <- gsub('data:  significanceMain[[input$radioSigBands]] and significanceComparing[[input$radioSigBands]]','',testRes)
+          dValue <- paste("D = ", testRes[[1]][[1]])
+          pValue <- paste("p-value = ", testRes[2])
+          hypothesis <- paste("Alternative hypothesis: ",testRes[3])
+          output$significanceText1 <- renderText(dValue)
+          output$significanceText2 <- renderText(pValue)
+          output$significanceText3 <- renderText(hypothesis)
           output$frameHistogram <- renderPlot({
-            hist(significanceMain[[input$radioSigBands]],col=rgb(1,0,0,0.2))
-            hist(significanceComparing[[input$radioSigBands]], col=rgb(1,0,0,0.2), add=T)
+            hist(significanceMain[[input$radioSigBands]],col=rgb(1,0,0,0.5), ylab="", xlab="", main="Histogram")
+            hist(significanceComparing[[input$radioSigBands]], col=rgb(0,0,1,0.5), add=T)
+            legend("topright",legend=c(input$significanceEpisodes, input$significanceComparing),col=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), pt.cex=2, pch=15 )
           })
         },error = function(e){
           output$significanceText <- renderText("Not enough data to perform KS test.")
