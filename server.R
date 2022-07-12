@@ -97,6 +97,7 @@ shinyServer(function(input, output, session){
     
     observeEvent(input$loadHrButton, {
       file <- reactive(input$loadHrButton)
+      hrv.data <<- CreateHRVData()
       if(length(file()) > 0 & is.numeric(file())){
         return(NULL)
       }else{
@@ -134,6 +135,8 @@ shinyServer(function(input, output, session){
           showNotification(loadingFileErrorStr, type = 'err')
           print(e)
         })
+        updateSelectInput(session, "poincareEpisodes", choices = c(""))
+        updateSelectInput(session, "poincareComparing", choices = c(""))
       }
     })
     
@@ -165,6 +168,7 @@ shinyServer(function(input, output, session){
                   listOfEpisodeOptions <- unique(ListEpisodes(hrv.data)["Tag"])
                   listOfEpisodeOptions <- append(listOfEpisodeOptions, "GLOBAL")
                   updateSelectInput(session, "poincareEpisodes", choices = listOfEpisodeOptions, selected="GLOBAL")
+                  updateSelectInput(session, "poincareComparing", choices = unique(ListEpisodes(hrv.data)["Tag"]))
                   episodesSelected <<- TRUE
                   shinyjs::enable("clearEpButton")
                   if(beatInterpolated){
@@ -184,6 +188,8 @@ shinyServer(function(input, output, session){
         shinyjs::disable("sigAnBt")
         hrv.data <<- RemoveEpisodes(hrv.data, Tags = "all", Indexes = "all")
         episodesSelected <<- FALSE
+        updateSelectInput(session, "poincareEpisodes", choices = c("GLOBAL"), selected="GLOBAL")
+        updateSelectInput(session, "poincareComparing", choices = c(""), selected="GLOBAL")
         shinyjs::disable("clearEpButton")
         output$mainGraph<-renderPlot({
           PlotNIHR(hrv.data, main="Data")
