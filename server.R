@@ -329,6 +329,7 @@ shinyServer(function(input, output, session){
       if(beatSelected){
         hrv.data = CreateNonLinearAnalysis(hrv.data)
         if(input$poincareEpisodes == "GLOBAL"){
+          shinyjs::showElement("secondaryPoinPlot")
           updateSelectInput(session, "poincareComparing", choices = ListEpisodes(hrv.data)["Tag"])
           output$mainPoinPlot <- {
             renderPlot({
@@ -344,6 +345,7 @@ shinyServer(function(input, output, session){
           }
         }else{
           updateSelectInput(session, "poincareComparing", choices="")
+          shinyjs::hideElement("secondaryPoinPlot")
           output$mainPoinPlot <- {
             if(episodesSelected){
               hrv.episode = CreateHRVData(Verbose = TRUE)
