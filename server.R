@@ -42,7 +42,9 @@ shinyServer(function(input, output, session){
     
     hideElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
     hideElement(id="panelReportMainPanel", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
-    hideElement(id="significanceText", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+    hideElement(id="significanceText1", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+    hideElement(id="significanceText2", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+    hideElement(id="significanceText3", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
     hideElement(id="frameHistogram",anim = F, selector=NULL, asis = FALSE)
     
     volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
@@ -64,15 +66,6 @@ shinyServer(function(input, output, session){
       reloadBatchDatatable()
     }
     
-    deleteEp <- function(selectedEp){
-      batchEpisodeList[[selectedEp]] <<- ""
-      hrv.batchEp.data <- batchHrvObjects[[selectedEp]]
-      hrv.batchEp.data$Episodes <- NULL
-      batchHrvObjects[[selectedEp]] <<- hrv.batchEp.data
-      
-      reloadBatchDatatable()
-    }
-    
     shinyInput <- function(FUN, len, id, ...) {
       if(len > 0){
         inputs <- character(len)
@@ -86,16 +79,10 @@ shinyServer(function(input, output, session){
     }
     
     reloadBatchDatatable <- function(){
-      print("Entering reload func")
-      print(unlist(batchFileList))
-      print(unlist(batchRouteList))
-      print(unlist(batchEpisodeList))
-      print(batchFileNum -1)
       df <- data.frame(
         Name = unlist(batchFileList),
         Route = unlist(batchRouteList),
-        Delete = paste(shinyInput(actionButton, batchFileNum-1, 'button_', label = "Beat"),
-                          shinyInput(actionButton, batchFileNum-1, 'epButton_', label = "Episodes")),
+        Delete = shinyInput(actionButton, batchFileNum-1, 'button_', label = "Beat"),
         stringsAsFactors = FALSE
       )
       print("data frame created successfully")
@@ -104,7 +91,6 @@ shinyServer(function(input, output, session){
       onclick(paste0("button_",3), deleteBeat(3))
       onclick(paste0("button_",4), deleteBeat(4))
       onclick(paste0("button_",5), deleteBeat(5))
-      print("onclicks loaded successfully")
       output$batchTable <- renderDataTable(df, options=list(searching=FALSE,dom=""), escape = F)
       print("exiting reload func")
     }
@@ -535,14 +521,18 @@ shinyServer(function(input, output, session){
       if(significanceAnalysis == TRUE){
         showElement(id="significanceRow", anim = TRUE, animType="fade", time=0.4, selector=NULL, asis = FALSE)
         showElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
-        showElement(id="significanceText", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+        showElement(id="significanceText1", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+        showElement(id="significanceText2", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+        showElement(id="significanceText3", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
         showElement(id="frameHistogram",anim = F, selector=NULL, asis = FALSE)
         hideElement(id="mainFramePlot", anim=F, selector="NULL", asis=FALSE)
         updateActionButton(session, "sigAnBt",label = "Back")
       }else{
         hideElement(id="significanceRow", anim=TRUE, animType="fade", time=0.4, selector="NULL", asis=FALSE)
         hideElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
-        hideElement(id="significanceText", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+        hideElement(id="significanceText1", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+        hideElement(id="significanceText2", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
+        hideElement(id="significanceText3", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
         hideElement(id="frameHistogram",anim = F, selector=NULL, asis = FALSE)
         showElement(id="mainFramePlot", anim = F, selector=NULL, asis = FALSE)
         updateActionButton(session, "sigAnBt",label = "Significance Analysis")
@@ -562,39 +552,38 @@ shinyServer(function(input, output, session){
     })
     
     observeEvent(input$loadMultipleData, {
-      if(batchFileNum < 6){
         file <- reactive(input$loadMultipleData)
         if(length(file()) > 0 & is.numeric(file())){
           return(NULL)
         }else{
           datapath <- parseFilePaths(volumes, file())$datapath
           for(d in datapath){
-            tryCatch({
-              currentDatapath <- gsub("/",.Platform$file.sep, d)
-              currentDatapath <- gsub(basename(d), "", d)
-              fileName <- basename(d)
-              
-              hrv.batchData <- CreateHRVData()
-              hrv.batchData <- SetVerbose(hrv.data, TRUE)
-              hrv.batchData <- LoadBeatAscii(hrv.batchData, fileName, currentDatapath)
-              
-              batchHrvObjects[batchFileNum] <<- list(hrv.batchData)
-              batchFileList[batchFileNum] <<- fileName
-              batchRouteList[batchFileNum] <<- currentDatapath
-              batchEpisodeList[batchFileNum] <<- ""
-              batchFileNum <<- batchFileNum + 1
-              
-              hrv.batchData <- NULL
-            },error = function(e){
-                showNotification("There was an error while loading at least one of the files. You can check the files actually loaded on the sidebar menu.", 
-                                 type = 'err')
-            })
+            if(batchFileNum < 6){
+              tryCatch({
+                currentDatapath <- gsub("/",.Platform$file.sep, d)
+                currentDatapath <- gsub(basename(d), "", d)
+                fileName <- basename(d)
+                
+                hrv.batchData <- CreateHRVData()
+                hrv.batchData <- SetVerbose(hrv.data, TRUE)
+                hrv.batchData <- LoadBeatAscii(hrv.batchData, fileName, currentDatapath)
+                
+                batchHrvObjects[batchFileNum] <<- list(hrv.batchData)
+                batchFileList[batchFileNum] <<- fileName
+                batchRouteList[batchFileNum] <<- currentDatapath
+                batchFileNum <<- batchFileNum + 1
+                
+                hrv.batchData <- NULL
+              },error = function(e){
+                  showNotification("There was an error while loading at least one of the files. You can check the files actually loaded on the sidebar menu.", 
+                                   type = 'err')
+              })
+            }else{
+              showNotification("You have already reached the maximum number of files allowed on this mode.", type='warning')
+            }
           }
         }
         reloadBatchDatatable()
-    }else{
-      showNotification("You have already reached the maximum number of files allowed on this mode.", type='warning')
-    }
    })
     
     observeEvent(input$runBatch, {
@@ -656,7 +645,7 @@ shinyServer(function(input, output, session){
                    data[[j]][[k]] <- round(timeAnalysis$pNN50, 4)
                  },
                  rMSSD = {
-                   data[[j]][[k]] <- timeAnalysis$rMMSD
+                   data[[j]][[k]] <- round(timeAnalysis$rMSSD, 4)
                  },
                  IRRR = {
                    data[[j]][[k]] <- round(timeAnalysis$IRRR, 4)
@@ -677,7 +666,7 @@ shinyServer(function(input, output, session){
       df <- as.data.frame(do.call(cbind, data))
       rownames(df) <- unlist(selectedParams)
       colnames(df) <- seq_len(batchFileNum-1)
-      output$batchMainTable <- renderDataTable(df, options=list(searching=FALSE,dom=""), escape = F)
+      output$batchMainTable <- renderDataTable(df, options=list(searching=FALSE,dom="",pageLength = 15), escape = F)
     })
     
     repaintPoincareCompare <- function(){
@@ -713,7 +702,7 @@ shinyServer(function(input, output, session){
             legend("topright",legend=c(input$significanceEpisodes, input$significanceComparing),col=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), pt.cex=2, pch=15 )
           })
         },error = function(e){
-          output$significanceText <- renderText("Not enough data to perform KS test.")
+          output$significanceText1 <- renderText("Not enough data to perform KS test.")
         })
       }
     }

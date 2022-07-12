@@ -221,9 +221,7 @@ ui<-fluidPage(
                fluidRow(
                  h4("Beats and episodes"),
                  tags$div(id = "batchActionsWrapper", 
-                   shinyFilesButton("loadMultipleData", "Load data", "Select a file",multiple=T, buttonType = "default", viewtype = "detail"),
-                   selectInput("batchEpisodes","",choices="",multiple=FALSE, width="150px"),
-                   shinyFilesButton("batchEpisodesBt", "Add episode", "", multiple=F)
+                   shinyFilesButton("loadMultipleData", "Load data", "Select a file",multiple=T, buttonType = "default", viewtype = "detail")
                  )
                ),
                fluidRow(
