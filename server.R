@@ -39,6 +39,7 @@ shinyServer(function(input, output, session){
     shinyjs::disable("loadEpButton")
     shinyjs::disable("clearEpButton")
     shinyjs::disable("interpolateButton")
+    shinyjs::disable("runBatch")
     
     hideElement(id="significanceOptions", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
     hideElement(id="panelReportMainPanel", anim = TRUE, animType="slide", time=0.1, selector=NULL, asis = FALSE)
@@ -64,6 +65,9 @@ shinyServer(function(input, output, session){
       batchRouteList[[selectedRow]] <<- NULL
       batchHrvObjects[[selectedRow]] <<- NULL
       reloadBatchDatatable()
+      if(batchFileNum == 1){
+        shinyjs::disable("runBatch")
+      }
     }
     
     shinyInput <- function(FUN, len, id, ...) {
@@ -590,6 +594,7 @@ shinyServer(function(input, output, session){
               showNotification("You have already reached the maximum number of files allowed on this mode.", type='warning')
             }
           }
+          shinyjs::enable("runBatch")
         }
         reloadBatchDatatable()
    })
