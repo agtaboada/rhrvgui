@@ -1,0 +1,18 @@
+Package: rhrvgui
+Type: Package
+Title: A graphic interface for RHRV
+Description: A web-based interface for the package RHRV. Allows user to load beat and episodes data, edit and interpolate it, as well as performing different types analysis. It also supports a batch mode that allows the user to perform operations with more than a beat data file at once.
+Imports:
+    RHRV,
+    shiny,
+    shinyFiles,
+    shinyjs,
+    tkrplot,
+    DT,
+    ggplot2
+Authors@R: person("Aitor", "Gomez Taboada", email = "agtaboada@esei.uvigo.es",
+  role = c("aut", "cre"))
+License: MIT
+Year: 2021
+Version: 1.0
+RoxygenNote: 7.2.0
