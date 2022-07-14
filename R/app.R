@@ -401,7 +401,7 @@ server <- function(input, output, session){
       df <- data.frame(
         Name = unlist(batchFileList),
         Route = unlist(batchRouteList),
-        Delete = shinyInput(actionButton, batchFileNum-1, 'button_', label = "Beat"),
+        Delete = shinyInput(actionButton, batchFileNum-1, 'button_', label = "Delete"),
         stringsAsFactors = FALSE
       )
       print("data frame created successfully")
