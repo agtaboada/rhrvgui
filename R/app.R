@@ -940,7 +940,7 @@ server <- function(input, output, session){
         hrv.batch.data <- CalculateCorrDim(hrv.batch.data,indexNonLinearAnalysis=1, minEmbeddingDim=2, maxEmbeddingDim=8,timeLag=1,minRadius=1, maxRadius=15, pointsRadius=20,
                                      theilerWindow=10, corrOrder=2,doPlot=FALSE)
         hrv.batch.data <- CalculateSampleEntropy(hrv.batch.data,indexNonLinearAnalysis=1,doPlot=FALSE)
-        hrv.batch.data <- EstimateSampleEntropy(hrv.batch.data,indexNonLinearAnalysis=1,regressionRange=c(6,10))
+        hrv.batch.data <- EstimateSampleEntropy(hrv.batch.data,indexNonLinearAnalysis=1,regressionRange=c(6,10),doPlot=FALSE)
         hrv.batch.data <- CalculatePowerBand(hrv.batch.data, indexFreqAnalysis = 1, size = winSize, shift = winShift, sizesp = 1024)
         
         timeAnalysis = hrv.batch.data$TimeAnalysis[[1]]
