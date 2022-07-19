@@ -410,6 +410,16 @@ server <- function(input, output, session){
       onclick(paste0("button_",3), deleteBeat(3))
       onclick(paste0("button_",4), deleteBeat(4))
       onclick(paste0("button_",5), deleteBeat(5))
+      onclick(paste0("button_",6), deleteBeat(6))
+      onclick(paste0("button_",7), deleteBeat(7))
+      onclick(paste0("button_",8), deleteBeat(8))
+      onclick(paste0("button_",9), deleteBeat(9))
+      onclick(paste0("button_",10), deleteBeat(10))
+      onclick(paste0("button_",11), deleteBeat(11))
+      onclick(paste0("button_",12), deleteBeat(12))
+      onclick(paste0("button_",13), deleteBeat(13))
+      onclick(paste0("button_",14), deleteBeat(14))
+      onclick(paste0("button_",15), deleteBeat(15))
       output$batchTable <- renderDataTable(df, options=list(searching=FALSE,dom=""), escape = F)
       print("exiting reload func")
     }
@@ -885,7 +895,7 @@ server <- function(input, output, session){
         }else{
           datapath <- parseFilePaths(volumes, file())$datapath
           for(d in datapath){
-            if(batchFileNum < 6){
+            if(batchFileNum <= 15){
               tryCatch({
                 currentDatapath <- gsub("/",.Platform$file.sep, d)
                 currentDatapath <- gsub(basename(d), "", d)

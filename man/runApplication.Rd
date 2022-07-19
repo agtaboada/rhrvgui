@@ -10,7 +10,7 @@ runApplication()
 Opens the GUI on a new window.
 }
 \description{
-Starts the application.
+runApplication
 }
 \examples{
 runApplication()
